@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NookGram - Modern & Fixed Replies</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fff5f8;
+        }
+
+        .page {
+            display: none; min-height: 100vh; width: 100vw;
+            background-size: cover; background-position: center; background-repeat: no-repeat;
+            background-attachment: fixed; flex-direction: column; align-items: center; padding-bottom: 100px;
+        }
+
+        .active { display: flex; }
+
+        /* --- PAGE CONNEXION --- */
+        #page-connexion { 
+            background-image: url('https://i.pinimg.com/originals/fb/4f/c9/fb4fc97e9ae190c742cfc1a9b90a9fb6.gif') !important; 
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 25px; 
+            border-radius: 30px;
+            border: 2px solid rgba(255, 20, 147, 0.3);
+            box-shadow: 0 10px 30px rgba(255, 20, 147, 0.15);
+            width: 90%; max-width: 380px; margin-top: 20px; text-align: center;
+            overflow: hidden; /* Important pour la bannière */
+        }
+
+        #page-connexion .card {
+            background-image: url('https://i.pinimg.com/736x/b5/b9/4f/b5b94fabccd27310047fc3743ecedbe6.jpg');
+            background-size: cover; image-rendering: pixelated; border: 5px solid #FF1493;
+            border-radius: 0px; padding: 40px; width: 320px;
+        }
+
+        .btn-pixel {
+            width: 100%; border: 4px solid #FF1493; color: #FF1493; font-weight: bold;
+            text-transform: uppercase; padding: 15px; cursor: pointer; border-radius: 0px;
+            background: linear-gradient(to bottom, #ffffff 0%, #ffffff 25%, #ffdae9 25%, #ffdae9 50%, #ffb6c1 50%, #ffb6c1 75%, #ff69b4 75%, #ff69b4 100% );
+            image-rendering: pixelated; box-shadow: 4px 4px 0px #FF1493;
+        }
+
+        #profile-pic-preview, .profile-pic-small, #profil-pic-big, #nav-mini-pp { border-radius: 50% !important; }
+
+        .navbar {
+            position: fixed; bottom: 0; width: 100%; height: 80px;
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
+            border-top: 2px solid rgba(255, 20, 147, 0.2);
+            display: none; justify-content: space-around; align-items: center; z-index: 1000;
+        }
+
+        .nav-icon { width: 45px; height: 45px; border-radius: 12px; object-fit: cover; border: 2px solid #FF1493; }
+        .nav-item { cursor: pointer; background: none; border: none; display: flex; flex-direction: column; align-items: center; }
+        .nav-item span { font-size: 10px; color: #FF1493; font-weight: bold; margin-top: 2px; }
+
+        .post { 
+            background: white; border: 1px solid rgba(255, 20, 147, 0.2); border-radius: 25px; 
+            padding: 15px; margin: 15px 0; width: 90%; max-width: 380px; text-align: left;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .post-header { display: flex; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #ffdae9; padding-bottom: 5px;}
+        .profile-pic-small { width: 40px; height: 40px; object-fit: cover; border: 2px solid #FF1493; margin-right: 10px; background: white;}
+        .post-img { width: 100%; border-radius: 15px; margin-top: 10px; }
+        .post-actions { margin-top: 10px; display: flex; gap: 15px; font-weight: bold; color: #FF1493; cursor: pointer; font-size: 13px; }
+        
+        .comment-section { border-top: 1px solid #ffdae9; margin-top: 10px; padding-top: 10px; }
+        .comment { font-size: 13px; margin-bottom: 8px; color: #5d4037; }
+        .comment-user { font-weight: bold; color: #FF1493; }
+        .reply-btn { background: none; border: none; color: #ff69b4; font-size: 10px; cursor: pointer; text-decoration: underline; padding-left: 5px; }
+        
+        .replies-container { 
+            margin-left: 30px !important; 
+            border-left: 2px solid #ffdae9; 
+            padding-left: 12px; 
+            margin-top: 8px; 
+        }
+        
+        .comment-input-area { display: flex; gap: 5px; margin-top: 8px; }
+        .comment-input-area input { flex: 1; padding: 10px; border: 1px solid #ffdae9; border-radius: 20px; font-size: 12px; background: #fffcfd; }
+        .comment-input-area button { width: 50px; background: #FF1493; color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; }
+
+        /* NOUVEAU STYLE BANNIÈRE */
+        .banner-container {
+            width: calc(100% + 50px);
+            height: 100px;
+            margin: -25px -25px 50px -25px;
+            background: #ffdae9;
+            position: relative;
+            border-bottom: 2px solid #FF1493;
+        }
+        #profil-banner-img { width: 100%; height: 100%; object-fit: cover; }
+        #profil-pic-big { position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); }
+
+        #profil-bio { font-size: 14px; color: #7a5c61; margin: 10px 0; font-style: italic; }
+        .btn-bio { background: #FF1493; color: white; border: none; padding: 6px 12px; border-radius: 20px; font-size: 10px; cursor: pointer; font-weight: bold; }
+
+        .msg-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffdae9; padding-bottom: 10px; margin-bottom: 15px; }
+        .msg-btn { background: #FF1493; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        #group-popup {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; border: 2px solid #FF1493; border-radius: 30px; padding: 25px;
+            z-index: 2000; width: 80%; max-width: 300px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+
+        #page-accueil, #page-search, #page-messages, #page-profil { 
+            background-image: url('https://i.pinimg.com/736x/dc/12/c8/dc12c8629ff2c1330a2270047616e8d8.jpg'); 
+        }
+
+        input[type="text"], input[type="password"], textarea {
+            width: 100%; padding: 12px; margin: 10px 0;
+            border: 1px solid #ffdae9; border-radius: 15px;
+            box-sizing: border-box; color: #FF1493; background: #fffcfd;
+        }
+
+        #profile-pic-preview { width: 120px; height: 120px; object-fit: cover; border: 4px solid #FF1493; margin: 0 auto 15px auto; display: none; background: white; }
+    </style>
+</head>
+<body>
+
+    <div id="page-connexion" class="page active">
+        <div class="card">
+            <h2 style="color: #FF1493; text-shadow: 2px 2px 0px white;">CONNEXION</h2>
+            <form id="loginForm">
+                <img id="profile-pic-preview" src="">
+                <label style="color:#FF1493; font-size:11px; font-weight:bold;">PHOTO DE PROFIL :</label>
+                <input type="file" id="profileImageInput" accept="image/*" onchange="previewProfilePic()" style="font-size:10px; margin-bottom:10px;">
+                <input type="text" id="username" placeholder="PSEUDO" required>
+                <input type="password" id="password" placeholder="MOT DE PASSE" required>
+                <button type="submit" class="btn-pixel">VALIDER</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="page-accueil" class="page">
+        <div class="card">
+            <textarea id="postText" placeholder="Partage ta journée..."></textarea>
+            <input type="file" id="postImage" accept="image/*">
+            <button onclick="creerPost()" style="background:#FF1493; color:white; border:none; padding:12px; width:100%; border-radius:15px; cursor:pointer; font-weight:bold; margin-top:10px;">PUBLIER</button>
+        </div>
+        <div id="feed"></div>
+    </div>
+
+    <div id="page-search" class="page"><div class="card"><h2>RECHERCHE</h2><input type="text" placeholder="🔍 Pixel search..."></div></div>
+
+    <div id="page-messages" class="page">
+        <div class="card">
+            <div class="msg-header">
+                <h2 style="color:#FF1493; margin:0;">MESSAGES</h2>
+                <div style="display:flex; gap:10px;">
+                    <button class="msg-btn" onclick="toggleSearchFriend()">+</button>
+                    <button class="msg-btn" onclick="toggleGroupPopup()">*</button>
+                </div>
+            </div>
+            <div id="search-friend-bar" style="display:none; margin-bottom:15px;">
+                <input type="text" id="friend-search-input" placeholder="Rechercher un pseudo...">
+            </div>
+            <p id="no-msg-text" style="color:#999; font-size: 14px;">Aucun message pour le moment.</p>
+        </div>
+    </div>
+
+    <div id="group-popup">
+        <h3 style="color:#FF1493; margin-top:0;">CRÉER UN GROUPE</h3>
+        <div id="users-list-group">
+            <div class="user-option" onclick="selectUserForGroup(this)" style="padding:10px; cursor:pointer; color:#FF1493; font-weight:bold; border-radius:10px;">@isabelle</div>
+            <div class="user-option" onclick="selectUserForGroup(this)" style="padding:10px; cursor:pointer; color:#FF1493; font-weight:bold; border-radius:10px;">@nook</div>
+            <div class="user-option" onclick="selectUserForGroup(this)" style="padding:10px; cursor:pointer; color:#FF1493; font-weight:bold; border-radius:10px;">@admin</div>
+        </div>
+        <button onclick="validerGroupe()" style="background:#FF1493; color:white; border:none; padding:12px; border-radius:15px; font-weight:bold; cursor:pointer; width:100%; margin-top:15px;">CRÉER LE GROUPE</button>
+        <button onclick="toggleGroupPopup()" style="background:none; border:none; color:#FF1493; font-size:10px; text-decoration:underline; cursor:pointer; margin-top:10px;">ANNULER</button>
+    </div>
+
+    <div id="page-profil" class="page">
+        <div class="card">
+            <div class="banner-container" onclick="document.getElementById('bannerInput').click()">
+                <img id="profil-banner-img" src="https://i.pinimg.com/736x/8d/e2/2e/8de22e28372652155d3b64c185e33433.jpg">
+                <img id="profil-pic-big" src="" style="width:100px; height:100px; border:4px solid white; object-fit:cover; background:white;">
+                <input type="file" id="bannerInput" hidden accept="image/*" onchange="changeBanner()">
+            </div>
+            
+            <h2 id="profil-name" style="color:#FF1493; margin:10px 0 0 0;">@USER</h2>
+            <div id="profil-bio">Ajoute une biographie...</div>
+            <button class="btn-bio" onclick="modifierBio()">MODIFIER BIO</button>
+            
+            <div style="display:flex; justify-content:space-around; margin:20px 0; border-top: 1px solid rgba(0,0,0,0.05); padding-top:15px;">
+                <div><b id="count-post" style="color:#FF1493; font-size:20px;">0</b><br><small>POSTS</small></div>
+                <div><b style="color:#FF1493; font-size:20px;">0</b><br><small>FOLLOWERS</small></div>
+                <div><b id="total-likes" style="color:#FF1493; font-size:20px;">0</b><br><small>LIKES</small></div>
+            </div>
+            <button onclick="logout()" style="background:#f5f5f5; border:none; padding:10px; font-size:11px; width:60%; border-radius:10px; cursor:pointer; color:#888;">DECONNEXION</button>
+        </div>
+    </div>
+
+    <nav class="navbar" id="main-nav">
+        <button class="nav-item" onclick="showPage('page-accueil')"><img src="https://i.pinimg.com/1200x/f3/9a/0d/f39a0d06b747ffd7ec2fb4b4170afc72.jpg" class="nav-icon"><span>Home</span></button>
+        <button class="nav-item" onclick="showPage('page-search')"><img src="https://i.pinimg.com/1200x/08/73/0b/08730b6f81bdc2177804f101abdfe1a9.jpg" class="nav-icon"><span>Search</span></button>
+        <button class="nav-item" onclick="showPage('page-messages')"><img src="https://i.pinimg.com/736x/bd/19/34/bd1934ff714ca0abcd7a2169ee75e014.jpg" class="nav-icon"><span>Inbox</span></button>
+        <button class="nav-item" onclick="showPage('page-profil')"><div id="nav-mini-pp" style="width:45px; height:45px; border:2px solid #FF1493; display:flex; align-items:center; justify-content:center; overflow:hidden;">👤</div><span>Moi</span></button>
+    </nav>
+
+    <script>
+        let currentUser = "";
+        let currentProfilePic = "";
+        let postCount = 0;
+        let globalLikes = 0;
+        let pseudosExistants = ["admin", "nook", "isabelle"]; 
+        let selectedUsers = [];
+
+        // CHARGEMENT SAUVEGARDE
+        window.onload = () => {
+            const savedUser = localStorage.getItem('nookUser');
+            if (savedUser) {
+                currentUser = savedUser;
+                currentProfilePic = localStorage.getItem('nookPP') || "";
+                document.getElementById('profil-pic-big').src = currentProfilePic;
+                document.getElementById('profil-banner-img').src = localStorage.getItem('nookBanner') || "https://i.pinimg.com/736x/8d/e2/2e/8de22e28372652155d3b64c185e33433.jpg";
+                document.getElementById('profil-bio').innerText = localStorage.getItem('nookBio') || "Ajoute une biographie...";
+                document.getElementById('nav-mini-pp').innerHTML = currentProfilePic ? `<img src="${currentProfilePic}" style="width:100%; height:100%; object-fit:cover;">` : "👤";
+                
+                // Charger les posts
+                const savedPosts = JSON.parse(localStorage.getItem('nookPosts') || "[]");
+                savedPosts.forEach(p => renderPostUI(p));
+                postCount = savedPosts.length;
+                document.getElementById('count-post').innerText = postCount;
+                
+                lancerApp();
+            }
+        };
+
+        function previewProfilePic() {
+            const preview = document.getElementById('profile-pic-preview');
+            const fileInput = document.getElementById('profileImageInput');
+            if (fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => { preview.src = e.target.result; preview.style.display = "block"; };
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            let pseudoTape = document.getElementById('username').value.trim();
+            currentUser = pseudoTape;
+            localStorage.setItem('nookUser', currentUser);
+            
+            const fileInput = document.getElementById('profileImageInput');
+            if (fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => { 
+                    currentProfilePic = e.target.result; 
+                    localStorage.setItem('nookPP', currentProfilePic);
+                    document.getElementById('profil-pic-big').src = currentProfilePic;
+                    document.getElementById('nav-mini-pp').innerHTML = `<img src="${currentProfilePic}" style="width:100%; height:100%; object-fit:cover;">`;
+                    lancerApp(); 
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else { lancerApp(); }
+        });
+
+        function lancerApp() {
+            document.getElementById('page-connexion').classList.remove('active');
+            document.getElementById('page-accueil').classList.add('active');
+            document.getElementById('main-nav').style.display = "flex";
+            document.getElementById('profil-name').innerText = "@" + currentUser.toLowerCase();
+        }
+
+        function modifierBio() {
+            let n = prompt("Ta nouvelle bio ?");
+            if (n) {
+                document.getElementById('profil-bio').innerText = n;
+                localStorage.setItem('nookBio', n);
+            }
+        }
+
+        function changeBanner() {
+            const file = document.getElementById('bannerInput').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('profil-banner-img').src = e.target.result;
+                    localStorage.setItem('nookBanner', e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function creerPost() {
+            const text = document.getElementById('postText').value;
+            const imgInput = document.getElementById('postImage');
+            if (!text && !imgInput.files[0]) return;
+
+            const postData = { id: Date.now(), text: text, user: currentUser, pp: currentProfilePic, img: "" };
+
+            if (imgInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    postData.img = e.target.result;
+                    savePost(postData);
+                };
+                reader.readAsDataURL(imgInput.files[0]);
+            } else { savePost(postData); }
+
+            document.getElementById('postText').value = "";
+            imgInput.value = "";
+        }
+
+        function savePost(p) {
+            const allPosts = JSON.parse(localStorage.getItem('nookPosts') || "[]");
+            allPosts.unshift(p);
+            localStorage.setItem('nookPosts', JSON.stringify(allPosts));
+            renderPostUI(p);
+            postCount++;
+            document.getElementById('count-post').innerText = postCount;
+        }
+
+        function renderPostUI(p) {
+            const feed = document.getElementById('feed');
+            const post = document.createElement('div');
+            post.className = 'post';
+            let html = `<div class="post-header"><img src="${p.pp || 'https://via.placeholder.com/45'}" class="profile-pic-small"><span>@${p.user}</span></div><div>${p.text}</div>`;
+            if (p.img) html += `<img src="${p.img}" class="post-img">`;
+            post.innerHTML = html + actionsHTML(p.id);
+            feed.prepend(post);
+        }
+
+        function logout() { localStorage.clear(); location.reload(); }
+
+        // REPLIES & ACTIONS (Ton code original)
+        function showPage(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+        function actionsHTML(id) { return `<div class="post-actions"><span onclick="toggleLike(this)">🤍 J'aime</span><span onclick="document.getElementById('comment-area-${id}').style.display='block'">💬 Commenter</span></div><div id="comment-area-${id}" class="comment-section" style="display:none;"><div id="comments-list-${id}"></div><div class="comment-input-area"><input type="text" id="input-${id}" placeholder="Écrire..."><button onclick="addComment(${id})">OK</button></div></div>`; }
+        function toggleLike(el) { if (el.innerText.includes("🤍")) { el.innerText = "❤️ J'aimé"; globalLikes++; } else { el.innerText = "🤍 J'aime"; globalLikes--; } document.getElementById('total-likes').innerText = globalLikes; }
+        function addComment(id, parentId = null) {
+            const inputId = parentId ? `reply-input-${parentId}` : `input-${id}`;
+            const input = document.getElementById(inputId);
+            if (!input.value) return;
+            const cid = Date.now();
+            const div = document.createElement('div');
+            div.className = 'comment';
+            div.innerHTML = `<span class="comment-user">@${currentUser}</span>: ${input.value} <button class="reply-btn" onclick="showReply(${cid}, ${id})">Répondre</button><div id="replies-${cid}" class="replies-container"></div><div id="reply-box-${cid}"></div>`;
+            document.getElementById(parentId ? `replies-${parentId}` : `comments-list-${id}`).appendChild(div);
+            input.value = "";
+            if(parentId) { document.getElementById(`reply-box-${parentId}`).innerHTML = ""; }
+        }
+        function showReply(cid, pid) { document.getElementById(`reply-box-${cid}`).innerHTML = `<div class="comment-input-area" style="margin-top:5px;"><input type="text" id="reply-input-${cid}" placeholder="Répondre..."><button onclick="addComment(${pid}, ${cid})">OK</button></div>`; }
+        function toggleSearchFriend() { let b = document.getElementById('search-friend-bar'); b.style.display = (b.style.display === 'none') ? 'block' : 'none'; }
+        function toggleGroupPopup() { let p = document.getElementById('group-popup'); p.style.display = (p.style.display === 'none') ? 'block' : 'none'; }
+        function selectUserForGroup(el) { let u = el.innerText; if (selectedUsers.includes(u)) { selectedUsers = selectedUsers.filter(x => x !== u); el.style.background = 'none'; } else { selectedUsers.push(u); el.style.background = '#ffdae9'; } }
+        function validerGroupe() { if (selectedUsers.length === 0) return; alert("Groupe créé !"); toggleGroupPopup(); document.getElementById('no-msg-text').innerText = "Groupe : " + selectedUsers.join(", "); }
+    </script>
+</body>
+</html>
