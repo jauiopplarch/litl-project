@@ -32,7 +32,7 @@
             border: 2px solid rgba(255, 20, 147, 0.3);
             box-shadow: 0 10px 30px rgba(255, 20, 147, 0.15);
             width: 90%; max-width: 380px; margin-top: 20px; text-align: center;
-            overflow: hidden; /* Important pour la bannière */
+            overflow: hidden; 
         }
 
         #page-connexion .card {
@@ -50,6 +50,21 @@
 
         #profile-pic-preview, .profile-pic-small, #profil-pic-big, #nav-mini-pp { border-radius: 50% !important; }
 
+        .pfp-container { position: absolute; bottom: -45px; left: 50%; transform: translateX(-50%); width: 100px; height: 100px; }
+        .pfp-deco {
+            position: absolute; top: -10%; left: -10%; width: 120%; height: 120%;
+            pointer-events: none; z-index: 5; object-fit: contain;
+        }
+
+        /* --- STICKERS --- */
+        .sticker {
+            display: inline-block;
+            width: 20px; height: 20px;
+            vertical-align: middle;
+            margin-left: 5px;
+            object-fit: contain;
+        }
+
         .navbar {
             position: fixed; bottom: 0; width: 100%; height: 80px;
             background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
@@ -64,18 +79,19 @@
         .post { 
             background: white; border: 1px solid rgba(255, 20, 147, 0.2); border-radius: 25px; 
             padding: 15px; margin: 15px 0; width: 90%; max-width: 380px; text-align: left;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); position: relative;
         }
 
-        .post-header { display: flex; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #ffdae9; padding-bottom: 5px;}
-        .profile-pic-small { width: 40px; height: 40px; object-fit: cover; border: 2px solid #FF1493; margin-right: 10px; background: white;}
+        .post-header { display: flex; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #ffdae9; padding-bottom: 5px; justify-content: space-between;}
+        .profile-pic-small { width: 40px; height: 40px; object-fit: cover; border: 2px solid #FF1493; margin-right: 10px; background: white; cursor: pointer;}
         .post-img { width: 100%; border-radius: 15px; margin-top: 10px; }
         .post-actions { margin-top: 10px; display: flex; gap: 15px; font-weight: bold; color: #FF1493; cursor: pointer; font-size: 13px; }
         
         .comment-section { border-top: 1px solid #ffdae9; margin-top: 10px; padding-top: 10px; }
-        .comment { font-size: 13px; margin-bottom: 8px; color: #5d4037; }
+        .comment { font-size: 13px; margin-bottom: 8px; color: #5d4037; position: relative; }
         .comment-user { font-weight: bold; color: #FF1493; }
         .reply-btn { background: none; border: none; color: #ff69b4; font-size: 10px; cursor: pointer; text-decoration: underline; padding-left: 5px; }
+        .del-btn { background: none; border: none; color: #ff4d4d; font-size: 10px; cursor: pointer; font-weight: bold; margin-left: 5px; }
         
         .replies-container { 
             margin-left: 30px !important; 
@@ -86,22 +102,18 @@
         
         .comment-input-area { display: flex; gap: 5px; margin-top: 8px; }
         .comment-input-area input { flex: 1; padding: 10px; border: 1px solid #ffdae9; border-radius: 20px; font-size: 12px; background: #fffcfd; }
-        .comment-input-area button { width: 50px; background: #FF1493; color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; }
+        .comment-input-area button { background: #FF1493; color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; padding: 0 10px; }
 
-        /* NOUVEAU STYLE BANNIÈRE */
         .banner-container {
-            width: calc(100% + 50px);
-            height: 100px;
-            margin: -25px -25px 50px -25px;
-            background: #ffdae9;
-            position: relative;
-            border-bottom: 2px solid #FF1493;
+            width: calc(100% + 50px); height: 100px; margin: -25px -25px 50px -25px;
+            background: #ffdae9; position: relative; border-bottom: 2px solid #FF1493;
         }
         #profil-banner-img { width: 100%; height: 100%; object-fit: cover; }
-        #profil-pic-big { position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); }
+        #profil-pic-big { width: 100%; height: 100%; border: 4px solid white; object-fit: cover; background: white; }
 
         #profil-bio { font-size: 14px; color: #7a5c61; margin: 10px 0; font-style: italic; }
         .btn-bio { background: #FF1493; color: white; border: none; padding: 6px 12px; border-radius: 20px; font-size: 10px; cursor: pointer; font-weight: bold; }
+        .btn-deco, .btn-sticker { background: #ffdae9; color: #FF1493; border: 1px solid #FF1493; width: 30px; height: 30px; border-radius: 50%; font-size: 14px; cursor: pointer; margin-left: 5px; vertical-align: middle; }
 
         .msg-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffdae9; padding-bottom: 10px; margin-bottom: 15px; }
         .msg-btn { background: #FF1493; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
@@ -112,17 +124,22 @@
             z-index: 2000; width: 80%; max-width: 300px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
         }
 
-        #page-accueil, #page-search, #page-messages, #page-profil { 
-            background-image: url('https://i.pinimg.com/736x/dc/12/c8/dc12c8629ff2c1330a2270047616e8d8.jpg'); 
-        }
+        #page-accueil, #page-search, #page-messages, #page-profil { background-image: url('https://i.pinimg.com/736x/dc/12/c8/dc12c8629ff2c1330a2270047616e8d8.jpg'); }
 
-        input[type="text"], input[type="password"], textarea {
-            width: 100%; padding: 12px; margin: 10px 0;
-            border: 1px solid #ffdae9; border-radius: 15px;
-            box-sizing: border-box; color: #FF1493; background: #fffcfd;
-        }
-
+        input[type="text"], input[type="password"], textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ffdae9; border-radius: 15px; box-sizing: border-box; color: #FF1493; background: #fffcfd; }
         #profile-pic-preview { width: 120px; height: 120px; object-fit: cover; border: 4px solid #FF1493; margin: 0 auto 15px auto; display: none; background: white; }
+
+        /* --- STYLE CHAT PRIVÉ --- */
+        #chat-window {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; border: 2px solid #FF1493; border-radius: 25px; width: 90%; max-width: 350px;
+            height: 450px; z-index: 3000; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        #chat-header { background: #FF1493; color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        #chat-messages { flex: 1; padding: 15px; overflow-y: auto; background: #fff5f8; display: flex; flex-direction: column; gap: 8px; background-size: cover; background-position: center; }
+        .msg-bubble { padding: 8px 12px; border-radius: 15px; max-width: 80%; font-size: 13px; z-index: 2; display: flex; align-items: center; flex-wrap: wrap; }
+        .msg-me { background: #FF1493; color: white; align-self: flex-end; }
+        .msg-them { background: #ffdae9; color: #FF1493; align-self: flex-start; }
     </style>
 </head>
 <body>
@@ -169,6 +186,23 @@
         </div>
     </div>
 
+    <div id="chat-window">
+        <div id="chat-header">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span id="chat-with-name">@User</span>
+                <button onclick="document.getElementById('chatBgInput').click()" style="background:none; border:none; cursor:pointer; font-size:18px;" title="Changer fond d'écran">🖼️</button>
+                <input type="file" id="chatBgInput" hidden accept="image/*" onchange="changeChatBackground()">
+            </div>
+            <span onclick="closeChat()" style="cursor:pointer;">✖</span>
+        </div>
+        <div id="chat-messages"></div>
+        <div class="comment-input-area" style="padding: 10px; background: white;">
+            <input type="text" id="chat-input" placeholder="Ton message...">
+            <button onclick="ajouterStickerChat()" style="background:none; border:none; font-size:20px; cursor:pointer;">🏷️</button>
+            <button onclick="sendPrivateMsg()">OK</button>
+        </div>
+    </div>
+
     <div id="group-popup">
         <h3 style="color:#FF1493; margin-top:0;">CRÉER UN GROUPE</h3>
         <div id="users-list-group"></div>
@@ -178,23 +212,29 @@
 
     <div id="page-profil" class="page">
         <div class="card">
-            <div class="banner-container" onclick="document.getElementById('bannerInput').click()">
+            <div class="banner-container" id="banner-box">
                 <img id="profil-banner-img" src="https://i.pinimg.com/736x/8d/e2/2e/8de22e28372652155d3b64c185e33433.jpg">
-                <img id="profil-pic-big" src="" style="width:100px; height:100px; border:4px solid white; object-fit:cover; background:white;">
+                <div class="pfp-container">
+                    <img id="pfp-decoration-img" class="pfp-deco" src="" style="display:none;">
+                    <img id="profil-pic-big" src="">
+                </div>
                 <input type="file" id="bannerInput" hidden accept="image/*" onchange="changeBanner()">
             </div>
-            
             <h2 id="profil-name" style="color:#FF1493; margin:10px 0 0 0;">@USER</h2>
             <div id="profil-bio">Ajoute une biographie...</div>
-            <button class="btn-bio" onclick="modifierBio()">MODIFIER BIO</button>
-            
+            <div style="display:flex; align-items:center; justify-content:center; gap:5px;">
+                <button id="edit-bio-btn" class="btn-bio" onclick="modifierBio()">MODIFIER BIO</button>
+                <button id="bio-sticker-btn" class="btn-sticker" onclick="modifierStickerBio()">🏷️</button>
+                <button id="edit-deco-btn" class="btn-deco" onclick="modifierDeco()">✨</button>
+            </div>
             <div style="display:flex; justify-content:space-around; margin:20px 0; border-top: 1px solid rgba(0,0,0,0.05); padding-top:15px;">
                 <div><b id="count-post" style="color:#FF1493; font-size:20px;">0</b><br><small>POSTS</small></div>
                 <div><b style="color:#FF1493; font-size:20px;">0</b><br><small>FOLLOWERS</small></div>
                 <div><b id="total-likes" style="color:#FF1493; font-size:20px;">0</b><br><small>LIKES</small></div>
             </div>
-            <button onclick="logout()" style="background:#f5f5f5; border:none; padding:10px; font-size:11px; width:60%; border-radius:10px; cursor:pointer; color:#888;">DECONNEXION</button>
+            <button id="logout-btn" onclick="logout()" style="background:#f5f5f5; border:none; padding:10px; font-size:11px; width:60%; border-radius:10px; cursor:pointer; color:#888;">DECONNEXION</button>
         </div>
+        <div id="profil-feed" style="width: 100%; display: flex; flex-direction: column; align-items: center;"></div>
     </div>
 
     <nav class="navbar" id="main-nav">
@@ -206,28 +246,26 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, push, onValue, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, push, onValue, get, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyDHMUs0fOGnAAZegvWlQ0xt_hITgBTHMQ",
-            authDomain: "jaygram-e7fc2.firebaseapp.com",
-            databaseURL: "https://jaygram-e7fc2-default-rtdb.firebaseio.com",
-            projectId: "jaygram-e7fc2",
-            storageBucket: "jaygram-e7fc2.firebasestorage.app",
-            messagingSenderId: "372548325413",
+            apiKey: "AIzaSyDHMUs0fOGnAAZegvWlQ0xt_hITgBTHMQ", authDomain: "jaygram-e7fc2.firebaseapp.com",
+            databaseURL: "https://jaygram-e7fc2-default-rtdb.firebaseio.com", projectId: "jaygram-e7fc2",
+            storageBucket: "jaygram-e7fc2.firebasestorage.app", messagingSenderId: "372548325413",
             appId: "1:372548325413:web:572438635da623fb33efcc"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- VARIABLES GLOBALES ---
-        window.currentUser = "";
-        window.currentProfilePic = "";
-        let globalLikes = 0;
-        let selectedUsers = [];
+        window.currentUser = ""; window.currentProfilePic = ""; let chatTarget = ""; let selectedUsers = [];
 
-        // --- LOGIQUE CONNEXION ---
+        window.onload = () => {
+            const savedUser = localStorage.getItem('nookgram_user');
+            const savedPass = localStorage.getItem('nookgram_pass');
+            if(savedUser && savedPass) verifierEtConnecter(savedUser, savedPass, true);
+        };
+
         window.previewProfilePic = function() {
             const preview = document.getElementById('profile-pic-preview');
             const fileInput = document.getElementById('profileImageInput');
@@ -238,20 +276,28 @@
             }
         }
 
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            window.currentUser = document.getElementById('username').value.trim();
-            if(!window.currentProfilePic) window.currentProfilePic = "https://via.placeholder.com/100";
-            
-            // Sauvegarder l'utilisateur sur Firebase
-            set(ref(db, 'users/' + window.currentUser), {
-                name: window.currentUser,
-                pp: window.currentProfilePic,
-                bio: "Ajoute une biographie..."
-            });
-
-            lancerApp();
+            verifierEtConnecter(document.getElementById('username').value.trim(), document.getElementById('password').value, false);
         });
+
+        async function verifierEtConnecter(user, pass, automatic) {
+            const userRef = ref(db, 'users/' + user);
+            const snapshot = await get(userRef);
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                if (data.password === pass) {
+                    window.currentUser = user; window.currentProfilePic = data.pp;
+                    localStorage.setItem('nookgram_user', user); localStorage.setItem('nookgram_pass', pass);
+                    lancerApp();
+                } else if(!automatic) alert("Mot de passe incorrect !");
+            } else if(!automatic) {
+                window.currentUser = user; if(!window.currentProfilePic) window.currentProfilePic = "https://via.placeholder.com/100";
+                set(userRef, { name: user, password: pass, pp: window.currentProfilePic, bio: "Ajoute une biographie...", deco: "", stickerBio: "" });
+                localStorage.setItem('nookgram_user', user); localStorage.setItem('nookgram_pass', pass);
+                lancerApp();
+            }
+        }
 
         window.lancerApp = function() {
             document.getElementById('page-connexion').classList.remove('active');
@@ -260,93 +306,189 @@
             document.getElementById('profil-name').innerText = "@" + window.currentUser.toLowerCase();
             document.getElementById('profil-pic-big').src = window.currentProfilePic;
             document.getElementById('nav-mini-pp').innerHTML = `<img src="${window.currentProfilePic}" style="width:100%; height:100%; object-fit:cover;">`;
-            
-            chargerPosts();
-            écouterUtilisateurs();
+            chargerPosts(); écouterUtilisateurs();
+            calculerStatsProfil(window.currentUser);
         }
 
-        // --- GESTION DES POSTS ---
         window.creerPost = function() {
             const text = document.getElementById('postText').value;
             const imgInput = document.getElementById('postImage');
             if (!text && !imgInput.files[0]) return;
-
-            const postData = {
-                text: text,
-                user: window.currentUser,
-                pp: window.currentProfilePic,
-                timestamp: Date.now(),
-                img: ""
-            };
-
+            const postData = { text: text, user: window.currentUser, pp: window.currentProfilePic, timestamp: Date.now(), img: "", likes: 0 };
             if (imgInput.files[0]) {
                 const reader = new FileReader();
-                reader.onload = (e) => {
-                    postData.img = e.target.result;
-                    push(ref(db, 'posts'), postData);
-                };
+                reader.onload = (e) => { postData.img = e.target.result; push(ref(db, 'posts'), postData); };
                 reader.readAsDataURL(imgInput.files[0]);
-            } else {
-                push(ref(db, 'posts'), postData);
-            }
-
-            document.getElementById('postText').value = "";
-            imgInput.value = "";
+            } else push(ref(db, 'posts'), postData);
+            document.getElementById('postText').value = ""; imgInput.value = "";
         }
 
         function chargerPosts() {
             onValue(ref(db, 'posts'), (snapshot) => {
-                const feed = document.getElementById('feed');
-                feed.innerHTML = "";
-                const posts = [];
-                snapshot.forEach(child => { posts.unshift({id: child.key, ...child.val()}); });
-                posts.forEach(p => renderPostUI(p));
-                document.getElementById('count-post').innerText = posts.length;
+                const feed = document.getElementById('feed'); feed.innerHTML = "";
+                const posts = []; snapshot.forEach(child => { posts.unshift({id: child.key, ...child.val()}); });
+                posts.forEach(p => renderPostUI(p, 'feed'));
             });
         }
 
-        function renderPostUI(p) {
-            const feed = document.getElementById('feed');
+        function renderPostUI(p, targetId) {
+            const target = document.getElementById(targetId);
             const post = document.createElement('div');
             post.className = 'post';
-            let html = `<div class="post-header"><img src="${p.pp}" class="profile-pic-small"><span>@${p.user}</span></div><div>${p.text}</div>`;
+            let delBtn = (p.user === window.currentUser) ? `<span onclick="deletePost('${p.id}')" style="cursor:pointer; color:#ff4d4d;">🗑️</span>` : ``;
+            let html = `<div class="post-header">
+                <div style="display:flex; align-items:center; cursor:pointer;" onclick="voirProfil('${p.user}', '${p.pp}')">
+                    <img src="${p.pp}" class="profile-pic-small">
+                    <span>@${p.user}</span>
+                </div>
+                ${delBtn}
+            </div><div>${p.text}</div>`;
             if (p.img) html += `<img src="${p.img}" class="post-img">`;
-            post.innerHTML = html + actionsHTML(p.id);
-            feed.appendChild(post);
+            post.innerHTML = html + actionsHTML(p.id, p.likes || 0);
+            target.appendChild(post);
+            chargerCommentaires(p.id);
         }
 
-        // --- ACTIONS & COMMENTAIRES (Ton code préservé) ---
-        window.actionsHTML = (id) => `<div class="post-actions"><span onclick="toggleLike(this)">🤍 J'aime</span><span onclick="document.getElementById('comment-area-${id}').style.display='block'">💬 Commenter</span></div><div id="comment-area-${id}" class="comment-section" style="display:none;"><div id="comments-list-${id}"></div><div class="comment-input-area"><input type="text" id="input-${id}" placeholder="Écrire..."><button onclick="addComment('${id}')">OK</button></div></div>`;
+        window.voirProfil = (user, pp) => {
+            const isMe = (user === window.currentUser);
+            document.getElementById('profil-name').innerText = "@" + user.toLowerCase();
+            document.getElementById('profil-pic-big').src = pp;
+            
+            document.getElementById('edit-bio-btn').style.display = isMe ? "inline-block" : "none";
+            document.getElementById('bio-sticker-btn').style.display = isMe ? "inline-block" : "none";
+            document.getElementById('edit-deco-btn').style.display = isMe ? "inline-block" : "none";
+            document.getElementById('logout-btn').style.display = isMe ? "inline-block" : "none";
+            document.getElementById('banner-box').onclick = isMe ? () => document.getElementById('bannerInput').click() : null;
+
+            // Charger la bio et le sticker de bio
+            onValue(ref(db, 'users/' + user), (snap) => {
+                const data = snap.val();
+                let bioHTML = data.bio || "Ajoute une biographie...";
+                if(data.stickerBio) bioHTML += `<img src="${data.stickerBio}" class="sticker">`;
+                document.getElementById('profil-bio').innerHTML = bioHTML;
+                
+                const decoImg = document.getElementById('pfp-decoration-img');
+                if(data.deco) { decoImg.src = data.deco; decoImg.style.display = "block"; }
+                else { decoImg.style.display = "none"; }
+            });
+
+            const pFeed = document.getElementById('profil-feed');
+            pFeed.innerHTML = "";
+            onValue(ref(db, 'posts'), (snap) => {
+                pFeed.innerHTML = "";
+                snap.forEach(child => {
+                    const p = child.val();
+                    if(p.user === user) renderPostUI({id: child.key, ...p}, 'profil-feed');
+                });
+            });
+
+            calculerStatsProfil(user);
+            showPage('page-profil', true); 
+        }
+
+        function calculerStatsProfil(user) {
+            onValue(ref(db, 'posts'), (snap) => {
+                let count = 0; let likes = 0;
+                snap.forEach(p => {
+                    if(p.val().user === user) {
+                        count++;
+                        likes += (p.val().likes || 0);
+                    }
+                });
+                document.getElementById('count-post').innerText = count;
+                document.getElementById('total-likes').innerText = likes;
+            });
+        }
+
+        window.deletePost = (id) => { if(confirm("Supprimer ce post ?")) remove(ref(db, 'posts/' + id)); }
+
+        window.actionsHTML = (id, likes) => `<div class="post-actions"><span onclick="toggleLike('${id}', this)">🤍 ${likes} J'aime</span><span onclick="document.getElementById('comment-area-${id}').style.display='block'">💬 Commenter</span></div><div id="comment-area-${id}" class="comment-section" style="display:none;"><div id="comments-list-${id}"></div><div class="comment-input-area"><input type="text" id="input-${id}" placeholder="Écrire..."><button onclick="addComment('${id}')">OK</button></div></div>`;
         
-        window.toggleLike = (el) => {
-            if (el.innerText.includes("🤍")) { el.innerText = "❤️ J'aimé"; globalLikes++; } 
-            else { el.innerText = "🤍 J'aime"; globalLikes--; }
-            document.getElementById('total-likes').innerText = globalLikes;
+        window.toggleLike = (id, el) => {
+            const postRef = ref(db, 'posts/' + id);
+            get(postRef).then((snap) => {
+                let p = snap.val();
+                let currentLikes = p.likes || 0;
+                if (el.innerText.includes("🤍")) {
+                    currentLikes++;
+                    el.innerHTML = "❤️ " + currentLikes + " J'aimé";
+                } else {
+                    currentLikes--;
+                    el.innerHTML = "🤍 " + currentLikes + " J'aime";
+                }
+                update(postRef, { likes: currentLikes });
+                const profilName = document.getElementById('profil-name').innerText.replace('@', '');
+                calculerStatsProfil(profilName);
+            });
         }
 
         window.addComment = (id, parentId = null) => {
             const inputId = parentId ? `reply-input-${parentId}` : `input-${id}`;
             const input = document.getElementById(inputId);
             if (!input.value) return;
-            const cid = Date.now();
-            const div = document.createElement('div');
-            div.className = 'comment';
-            div.innerHTML = `<span class="comment-user">@${window.currentUser}</span>: ${input.value} <button class="reply-btn" onclick="showReply('${cid}', '${id}')">Répondre</button><div id="replies-${cid}" class="replies-container"></div><div id="reply-box-${cid}"></div>`;
-            document.getElementById(parentId ? `replies-${parentId}` : `comments-list-${id}`).appendChild(div);
+            const commentData = { user: window.currentUser, text: input.value, timestamp: Date.now() };
+            const path = parentId ? `posts/${id}/comments/${parentId}/replies` : `posts/${id}/comments`;
+            push(ref(db, path), commentData);
             input.value = "";
-            if(parentId) { document.getElementById(`reply-box-${parentId}`).innerHTML = ""; }
+        }
+
+        function chargerCommentaires(postId) {
+            onValue(ref(db, `posts/${postId}/comments`), (snapshot) => {
+                const list = document.getElementById(`comments-list-${postId}`);
+                if(!list) return;
+                list.innerHTML = "";
+                snapshot.forEach(child => {
+                    const c = child.val();
+                    const cid = child.key;
+                    const delBtn = (c.user === window.currentUser) ? `<button class="del-btn" onclick="deleteComment('${postId}', '${cid}')">✖</button>` : '';
+                    const div = document.createElement('div');
+                    div.className = 'comment';
+                    div.innerHTML = `<span class="comment-user">@${c.user}</span>: ${c.text} ${delBtn} <button class="reply-btn" onclick="showReply('${cid}', '${postId}')">Répondre</button><div id="replies-${cid}" class="replies-container"></div><div id="reply-box-${cid}"></div>`;
+                    list.appendChild(div);
+                    if(c.replies) {
+                        const repCont = div.querySelector(`#replies-${cid}`);
+                        Object.keys(c.replies).forEach(rid => {
+                            const r = c.replies[rid];
+                            const rDelBtn = (r.user === window.currentUser) ? `<button class="del-btn" onclick="deleteComment('${postId}', '${cid}', '${rid}')">✖</button>` : '';
+                            repCont.innerHTML += `<div class="comment"><span class="comment-user">@${r.user}</span>: ${r.text} ${rDelBtn}</div>`;
+                        });
+                    }
+                });
+            });
+        }
+
+        window.deleteComment = (pid, cid, rid = null) => {
+            if(!confirm("Supprimer ce commentaire ?")) return;
+            const path = rid ? `posts/${pid}/comments/${cid}/replies/${rid}` : `posts/${pid}/comments/${cid}`;
+            remove(ref(db, path));
         }
 
         window.showReply = (cid, pid) => {
             document.getElementById(`reply-box-${cid}`).innerHTML = `<div class="comment-input-area" style="margin-top:5px;"><input type="text" id="reply-input-${cid}" placeholder="Répondre..."><button onclick="addComment('${pid}', '${cid}')">OK</button></div>`;
         }
 
-        // --- NAVIGATION & PROFIL ---
-        window.showPage = (id) => { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-        window.modifierBio = () => { let n = prompt("Ta nouvelle bio ?"); if (n) { document.getElementById('profil-bio').innerText = n; set(ref(db, 'users/' + window.currentUser + '/bio'), n); } }
-        window.logout = () => location.reload();
+        window.showPage = (id, force = false) => { 
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); 
+            document.getElementById(id).classList.add('active'); 
+            if(id === 'page-profil' && !force) {
+                voirProfil(window.currentUser, window.currentProfilePic);
+            }
+        }
+        
+        window.modifierBio = () => { let n = prompt("Ta nouvelle bio ?"); if (n) set(ref(db, 'users/' + window.currentUser + '/bio'), n); }
+        window.modifierStickerBio = () => { let s = prompt("Lien du sticker pour ta bio :"); if(s !== null) set(ref(db, 'users/' + window.currentUser + '/stickerBio'), s); }
+        window.modifierDeco = () => { let d = prompt("Colle le lien (URL) de ta décoration (Image ou GIF) :"); if(d !== null) set(ref(db, 'users/' + window.currentUser + '/deco'), d); }
+        window.logout = () => { localStorage.removeItem('nookgram_user'); localStorage.removeItem('nookgram_pass'); location.reload(); }
 
-        // --- MESSAGES & GROUPES ---
+        window.changeBanner = () => {
+            const file = document.getElementById('bannerInput').files[0];
+            if(file){
+                const reader = new FileReader();
+                reader.onload = (e) => { document.getElementById('profil-banner-img').src = e.target.result; };
+                reader.readAsDataURL(file);
+            }
+        }
+
         function écouterUtilisateurs() {
             onValue(ref(db, 'users'), (snapshot) => {
                 const list = document.getElementById('online-users-list');
@@ -355,28 +497,83 @@
                 snapshot.forEach(child => {
                     const u = child.val();
                     if(u.name !== window.currentUser) {
-                        list.innerHTML += `<div style="padding:10px; color:#FF1493;">● @${u.name} est en ligne</div>`;
+                        list.innerHTML += `<div style="padding:10px; color:#FF1493; display:flex; justify-content:space-between; align-items:center;">
+                            <span>● @${u.name} est en ligne</span>
+                            <button onclick="openChat('${u.name}')" style="background:#FF1493; color:white; border:none; border-radius:10px; padding:5px 10px; cursor:pointer;">✉️ Message</button>
+                        </div>`;
                         groupList.innerHTML += `<div class="user-option" onclick="selectUserForGroup(this)" style="padding:10px; cursor:pointer; color:#FF1493; font-weight:bold; border-radius:10px;">@${u.name}</div>`;
                     }
                 });
             });
         }
 
+        window.openChat = function(target) {
+            chatTarget = target;
+            document.getElementById('chat-with-name').innerText = "@" + target;
+            document.getElementById('chat-window').style.display = "flex";
+            const chatId = [window.currentUser, chatTarget].sort().join("_");
+            onValue(ref(db, 'direct_messages/' + chatId), (snapshot) => {
+                const box = document.getElementById('chat-messages');
+                box.innerHTML = "";
+                snapshot.forEach(child => {
+                    const m = child.val();
+                    if(m.sender) {
+                        const div = document.createElement('div');
+                        div.className = `msg-bubble ${m.sender === window.currentUser ? 'msg-me' : 'msg-them'}`;
+                        let content = m.text;
+                        if(m.sticker) content += `<img src="${m.sticker}" class="sticker">`;
+                        div.innerHTML = content;
+                        box.appendChild(div);
+                    }
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+            onValue(ref(db, 'chat_settings/' + chatId + '/background'), (snap) => {
+                const bg = snap.val();
+                const box = document.getElementById('chat-messages');
+                box.style.backgroundImage = bg ? `url(${bg})` : "none";
+            });
+        }
+
+        window.changeChatBackground = () => {
+            const file = document.getElementById('chatBgInput').files[0];
+            const chatId = [window.currentUser, chatTarget].sort().join("_");
+            if(file){
+                const reader = new FileReader();
+                reader.onload = (e) => set(ref(db, 'chat_settings/' + chatId + '/background'), e.target.result);
+                reader.readAsDataURL(file);
+            }
+        }
+
+        window.ajouterStickerChat = () => {
+            let s = prompt("Lien du sticker pour ce message :");
+            if(s) window.currentChatSticker = s;
+        }
+
+        window.closeChat = () => document.getElementById('chat-window').style.display = "none";
+
+        window.sendPrivateMsg = function() {
+            const input = document.getElementById('chat-input');
+            if (!input.value && !window.currentChatSticker) return;
+            const chatId = [window.currentUser, chatTarget].sort().join("_");
+            push(ref(db, 'direct_messages/' + chatId), { 
+                sender: window.currentUser, 
+                text: input.value, 
+                sticker: window.currentChatSticker || "",
+                timestamp: Date.now() 
+            });
+            input.value = "";
+            window.currentChatSticker = "";
+        }
+
         window.toggleSearchFriend = () => { let b = document.getElementById('search-friend-bar'); b.style.display = (b.style.display === 'none') ? 'block' : 'none'; }
         window.toggleGroupPopup = () => { let p = document.getElementById('group-popup'); p.style.display = (p.style.display === 'none') ? 'block' : 'none'; }
-        
         window.selectUserForGroup = (el) => { 
             let u = el.innerText; 
             if (selectedUsers.includes(u)) { selectedUsers = selectedUsers.filter(x => x !== u); el.style.background = 'none'; } 
             else { selectedUsers.push(u); el.style.background = '#ffdae9'; } 
         }
-
-        window.validerGroupe = () => { 
-            if (selectedUsers.length === 0) return; 
-            alert("Groupe créé !"); 
-            window.toggleGroupPopup(); 
-            document.getElementById('no-msg-text').innerText = "Groupe avec : " + selectedUsers.join(", "); 
-        }
+        window.validerGroupe = () => { if (selectedUsers.length === 0) return; alert("Groupe créé !"); window.toggleGroupPopup(); document.getElementById('no-msg-text').innerText = "Groupe avec : " + selectedUsers.join(", "); }
     </script>
 </body>
 </html>
