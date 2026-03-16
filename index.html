@@ -164,17 +164,14 @@
             <div id="search-friend-bar" style="display:none; margin-bottom:15px;">
                 <input type="text" id="friend-search-input" placeholder="Rechercher un pseudo...">
             </div>
-            <p id="no-msg-text" style="color:#999; font-size: 14px;">Aucun message pour le moment.</p>
+            <div id="online-users-list"></div>
+            <p id="no-msg-text" style="color:#999; font-size: 14px;">Connecte-toi pour voir les autres.</p>
         </div>
     </div>
 
     <div id="group-popup">
         <h3 style="color:#FF1493; margin-top:0;">CRÉER UN GROUPE</h3>
-        <div id="users-list-group">
-            <div class="user-option" onclick="selectUserForGroup(this)" style="padding:10px; cursor:pointer; color:#FF1493; font-weight:bold; border-radius:10px;">@isabelle</div>
-            <div class="user-option" onclick="selectUserForGroup(this)" style="padding:10px; cursor:pointer; color:#FF1493; font-weight:bold; border-radius:10px;">@nook</div>
-            <div class="user-option" onclick="selectUserForGroup(this)" style="padding:10px; cursor:pointer; color:#FF1493; font-weight:bold; border-radius:10px;">@admin</div>
-        </div>
+        <div id="users-list-group"></div>
         <button onclick="validerGroupe()" style="background:#FF1493; color:white; border:none; padding:12px; border-radius:15px; font-weight:bold; cursor:pointer; width:100%; margin-top:15px;">CRÉER LE GROUPE</button>
         <button onclick="toggleGroupPopup()" style="background:none; border:none; color:#FF1493; font-size:10px; text-decoration:underline; cursor:pointer; margin-top:10px;">ANNULER</button>
     </div>
@@ -207,154 +204,179 @@
         <button class="nav-item" onclick="showPage('page-profil')"><div id="nav-mini-pp" style="width:45px; height:45px; border:2px solid #FF1493; display:flex; align-items:center; justify-content:center; overflow:hidden;">👤</div><span>Moi</span></button>
     </nav>
 
-    <script>
-        let currentUser = "";
-        let currentProfilePic = "";
-        let postCount = 0;
-        let globalLikes = 0;
-        let pseudosExistants = ["admin", "nook", "isabelle"]; 
-        let selectedUsers = [];
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, push, onValue, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // CHARGEMENT SAUVEGARDE
-        window.onload = () => {
-            const savedUser = localStorage.getItem('nookUser');
-            if (savedUser) {
-                currentUser = savedUser;
-                currentProfilePic = localStorage.getItem('nookPP') || "";
-                document.getElementById('profil-pic-big').src = currentProfilePic;
-                document.getElementById('profil-banner-img').src = localStorage.getItem('nookBanner') || "https://i.pinimg.com/736x/8d/e2/2e/8de22e28372652155d3b64c185e33433.jpg";
-                document.getElementById('profil-bio').innerText = localStorage.getItem('nookBio') || "Ajoute une biographie...";
-                document.getElementById('nav-mini-pp').innerHTML = currentProfilePic ? `<img src="${currentProfilePic}" style="width:100%; height:100%; object-fit:cover;">` : "👤";
-                
-                // Charger les posts
-                const savedPosts = JSON.parse(localStorage.getItem('nookPosts') || "[]");
-                savedPosts.forEach(p => renderPostUI(p));
-                postCount = savedPosts.length;
-                document.getElementById('count-post').innerText = postCount;
-                
-                lancerApp();
-            }
+        const firebaseConfig = {
+            apiKey: "AIzaSyDHMUs0fOGnAAZegvWlQ0xt_hITgBTHMQ",
+            authDomain: "jaygram-e7fc2.firebaseapp.com",
+            databaseURL: "https://jaygram-e7fc2-default-rtdb.firebaseio.com",
+            projectId: "jaygram-e7fc2",
+            storageBucket: "jaygram-e7fc2.firebasestorage.app",
+            messagingSenderId: "372548325413",
+            appId: "1:372548325413:web:572438635da623fb33efcc"
         };
 
-        function previewProfilePic() {
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // --- VARIABLES GLOBALES ---
+        window.currentUser = "";
+        window.currentProfilePic = "";
+        let globalLikes = 0;
+        let selectedUsers = [];
+
+        // --- LOGIQUE CONNEXION ---
+        window.previewProfilePic = function() {
             const preview = document.getElementById('profile-pic-preview');
             const fileInput = document.getElementById('profileImageInput');
             if (fileInput.files[0]) {
                 const reader = new FileReader();
-                reader.onload = (e) => { preview.src = e.target.result; preview.style.display = "block"; };
+                reader.onload = (e) => { preview.src = e.target.result; preview.style.display = "block"; window.currentProfilePic = e.target.result; };
                 reader.readAsDataURL(fileInput.files[0]);
             }
         }
 
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            let pseudoTape = document.getElementById('username').value.trim();
-            currentUser = pseudoTape;
-            localStorage.setItem('nookUser', currentUser);
+            window.currentUser = document.getElementById('username').value.trim();
+            if(!window.currentProfilePic) window.currentProfilePic = "https://via.placeholder.com/100";
             
-            const fileInput = document.getElementById('profileImageInput');
-            if (fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (e) => { 
-                    currentProfilePic = e.target.result; 
-                    localStorage.setItem('nookPP', currentProfilePic);
-                    document.getElementById('profil-pic-big').src = currentProfilePic;
-                    document.getElementById('nav-mini-pp').innerHTML = `<img src="${currentProfilePic}" style="width:100%; height:100%; object-fit:cover;">`;
-                    lancerApp(); 
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            } else { lancerApp(); }
+            // Sauvegarder l'utilisateur sur Firebase
+            set(ref(db, 'users/' + window.currentUser), {
+                name: window.currentUser,
+                pp: window.currentProfilePic,
+                bio: "Ajoute une biographie..."
+            });
+
+            lancerApp();
         });
 
-        function lancerApp() {
+        window.lancerApp = function() {
             document.getElementById('page-connexion').classList.remove('active');
             document.getElementById('page-accueil').classList.add('active');
             document.getElementById('main-nav').style.display = "flex";
-            document.getElementById('profil-name').innerText = "@" + currentUser.toLowerCase();
+            document.getElementById('profil-name').innerText = "@" + window.currentUser.toLowerCase();
+            document.getElementById('profil-pic-big').src = window.currentProfilePic;
+            document.getElementById('nav-mini-pp').innerHTML = `<img src="${window.currentProfilePic}" style="width:100%; height:100%; object-fit:cover;">`;
+            
+            chargerPosts();
+            écouterUtilisateurs();
         }
 
-        function modifierBio() {
-            let n = prompt("Ta nouvelle bio ?");
-            if (n) {
-                document.getElementById('profil-bio').innerText = n;
-                localStorage.setItem('nookBio', n);
-            }
-        }
-
-        function changeBanner() {
-            const file = document.getElementById('bannerInput').files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    document.getElementById('profil-banner-img').src = e.target.result;
-                    localStorage.setItem('nookBanner', e.target.result);
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function creerPost() {
+        // --- GESTION DES POSTS ---
+        window.creerPost = function() {
             const text = document.getElementById('postText').value;
             const imgInput = document.getElementById('postImage');
             if (!text && !imgInput.files[0]) return;
 
-            const postData = { id: Date.now(), text: text, user: currentUser, pp: currentProfilePic, img: "" };
+            const postData = {
+                text: text,
+                user: window.currentUser,
+                pp: window.currentProfilePic,
+                timestamp: Date.now(),
+                img: ""
+            };
 
             if (imgInput.files[0]) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     postData.img = e.target.result;
-                    savePost(postData);
+                    push(ref(db, 'posts'), postData);
                 };
                 reader.readAsDataURL(imgInput.files[0]);
-            } else { savePost(postData); }
+            } else {
+                push(ref(db, 'posts'), postData);
+            }
 
             document.getElementById('postText').value = "";
             imgInput.value = "";
         }
 
-        function savePost(p) {
-            const allPosts = JSON.parse(localStorage.getItem('nookPosts') || "[]");
-            allPosts.unshift(p);
-            localStorage.setItem('nookPosts', JSON.stringify(allPosts));
-            renderPostUI(p);
-            postCount++;
-            document.getElementById('count-post').innerText = postCount;
+        function chargerPosts() {
+            onValue(ref(db, 'posts'), (snapshot) => {
+                const feed = document.getElementById('feed');
+                feed.innerHTML = "";
+                const posts = [];
+                snapshot.forEach(child => { posts.unshift({id: child.key, ...child.val()}); });
+                posts.forEach(p => renderPostUI(p));
+                document.getElementById('count-post').innerText = posts.length;
+            });
         }
 
         function renderPostUI(p) {
             const feed = document.getElementById('feed');
             const post = document.createElement('div');
             post.className = 'post';
-            let html = `<div class="post-header"><img src="${p.pp || 'https://via.placeholder.com/45'}" class="profile-pic-small"><span>@${p.user}</span></div><div>${p.text}</div>`;
+            let html = `<div class="post-header"><img src="${p.pp}" class="profile-pic-small"><span>@${p.user}</span></div><div>${p.text}</div>`;
             if (p.img) html += `<img src="${p.img}" class="post-img">`;
             post.innerHTML = html + actionsHTML(p.id);
-            feed.prepend(post);
+            feed.appendChild(post);
         }
 
-        function logout() { localStorage.clear(); location.reload(); }
+        // --- ACTIONS & COMMENTAIRES (Ton code préservé) ---
+        window.actionsHTML = (id) => `<div class="post-actions"><span onclick="toggleLike(this)">🤍 J'aime</span><span onclick="document.getElementById('comment-area-${id}').style.display='block'">💬 Commenter</span></div><div id="comment-area-${id}" class="comment-section" style="display:none;"><div id="comments-list-${id}"></div><div class="comment-input-area"><input type="text" id="input-${id}" placeholder="Écrire..."><button onclick="addComment('${id}')">OK</button></div></div>`;
+        
+        window.toggleLike = (el) => {
+            if (el.innerText.includes("🤍")) { el.innerText = "❤️ J'aimé"; globalLikes++; } 
+            else { el.innerText = "🤍 J'aime"; globalLikes--; }
+            document.getElementById('total-likes').innerText = globalLikes;
+        }
 
-        // REPLIES & ACTIONS (Ton code original)
-        function showPage(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-        function actionsHTML(id) { return `<div class="post-actions"><span onclick="toggleLike(this)">🤍 J'aime</span><span onclick="document.getElementById('comment-area-${id}').style.display='block'">💬 Commenter</span></div><div id="comment-area-${id}" class="comment-section" style="display:none;"><div id="comments-list-${id}"></div><div class="comment-input-area"><input type="text" id="input-${id}" placeholder="Écrire..."><button onclick="addComment(${id})">OK</button></div></div>`; }
-        function toggleLike(el) { if (el.innerText.includes("🤍")) { el.innerText = "❤️ J'aimé"; globalLikes++; } else { el.innerText = "🤍 J'aime"; globalLikes--; } document.getElementById('total-likes').innerText = globalLikes; }
-        function addComment(id, parentId = null) {
+        window.addComment = (id, parentId = null) => {
             const inputId = parentId ? `reply-input-${parentId}` : `input-${id}`;
             const input = document.getElementById(inputId);
             if (!input.value) return;
             const cid = Date.now();
             const div = document.createElement('div');
             div.className = 'comment';
-            div.innerHTML = `<span class="comment-user">@${currentUser}</span>: ${input.value} <button class="reply-btn" onclick="showReply(${cid}, ${id})">Répondre</button><div id="replies-${cid}" class="replies-container"></div><div id="reply-box-${cid}"></div>`;
+            div.innerHTML = `<span class="comment-user">@${window.currentUser}</span>: ${input.value} <button class="reply-btn" onclick="showReply('${cid}', '${id}')">Répondre</button><div id="replies-${cid}" class="replies-container"></div><div id="reply-box-${cid}"></div>`;
             document.getElementById(parentId ? `replies-${parentId}` : `comments-list-${id}`).appendChild(div);
             input.value = "";
             if(parentId) { document.getElementById(`reply-box-${parentId}`).innerHTML = ""; }
         }
-        function showReply(cid, pid) { document.getElementById(`reply-box-${cid}`).innerHTML = `<div class="comment-input-area" style="margin-top:5px;"><input type="text" id="reply-input-${cid}" placeholder="Répondre..."><button onclick="addComment(${pid}, ${cid})">OK</button></div>`; }
-        function toggleSearchFriend() { let b = document.getElementById('search-friend-bar'); b.style.display = (b.style.display === 'none') ? 'block' : 'none'; }
-        function toggleGroupPopup() { let p = document.getElementById('group-popup'); p.style.display = (p.style.display === 'none') ? 'block' : 'none'; }
-        function selectUserForGroup(el) { let u = el.innerText; if (selectedUsers.includes(u)) { selectedUsers = selectedUsers.filter(x => x !== u); el.style.background = 'none'; } else { selectedUsers.push(u); el.style.background = '#ffdae9'; } }
-        function validerGroupe() { if (selectedUsers.length === 0) return; alert("Groupe créé !"); toggleGroupPopup(); document.getElementById('no-msg-text').innerText = "Groupe : " + selectedUsers.join(", "); }
+
+        window.showReply = (cid, pid) => {
+            document.getElementById(`reply-box-${cid}`).innerHTML = `<div class="comment-input-area" style="margin-top:5px;"><input type="text" id="reply-input-${cid}" placeholder="Répondre..."><button onclick="addComment('${pid}', '${cid}')">OK</button></div>`;
+        }
+
+        // --- NAVIGATION & PROFIL ---
+        window.showPage = (id) => { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+        window.modifierBio = () => { let n = prompt("Ta nouvelle bio ?"); if (n) { document.getElementById('profil-bio').innerText = n; set(ref(db, 'users/' + window.currentUser + '/bio'), n); } }
+        window.logout = () => location.reload();
+
+        // --- MESSAGES & GROUPES ---
+        function écouterUtilisateurs() {
+            onValue(ref(db, 'users'), (snapshot) => {
+                const list = document.getElementById('online-users-list');
+                const groupList = document.getElementById('users-list-group');
+                list.innerHTML = ""; groupList.innerHTML = "";
+                snapshot.forEach(child => {
+                    const u = child.val();
+                    if(u.name !== window.currentUser) {
+                        list.innerHTML += `<div style="padding:10px; color:#FF1493;">● @${u.name} est en ligne</div>`;
+                        groupList.innerHTML += `<div class="user-option" onclick="selectUserForGroup(this)" style="padding:10px; cursor:pointer; color:#FF1493; font-weight:bold; border-radius:10px;">@${u.name}</div>`;
+                    }
+                });
+            });
+        }
+
+        window.toggleSearchFriend = () => { let b = document.getElementById('search-friend-bar'); b.style.display = (b.style.display === 'none') ? 'block' : 'none'; }
+        window.toggleGroupPopup = () => { let p = document.getElementById('group-popup'); p.style.display = (p.style.display === 'none') ? 'block' : 'none'; }
+        
+        window.selectUserForGroup = (el) => { 
+            let u = el.innerText; 
+            if (selectedUsers.includes(u)) { selectedUsers = selectedUsers.filter(x => x !== u); el.style.background = 'none'; } 
+            else { selectedUsers.push(u); el.style.background = '#ffdae9'; } 
+        }
+
+        window.validerGroupe = () => { 
+            if (selectedUsers.length === 0) return; 
+            alert("Groupe créé !"); 
+            window.toggleGroupPopup(); 
+            document.getElementById('no-msg-text').innerText = "Groupe avec : " + selectedUsers.join(", "); 
+        }
     </script>
 </body>
 </html>
