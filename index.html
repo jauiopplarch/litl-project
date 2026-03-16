@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NookGram - Modern & Fixed Replies</title>
+    <title>jayGram - Modern & Fixed Replies</title>
     <style>
         body, html {
             margin: 0; padding: 0; height: 100%;
@@ -109,7 +109,7 @@
             background: #ffdae9; position: relative; border-bottom: 2px solid #FF1493;
         }
         #profil-banner-img { width: 100%; height: 100%; object-fit: cover; }
-        #profil-pic-big { width: 100%; height: 100%; border: 4px solid white; object-fit: cover; background: white; }
+        #profil-pic-big { width: 100%; height: 100%; border: 4px solid white; object-fit: cover; background: white; cursor: pointer; }
 
         #profil-bio { font-size: 14px; color: #7a5c61; margin: 10px 0; font-style: italic; }
         .btn-bio { background: #FF1493; color: white; border: none; padding: 6px 12px; border-radius: 20px; font-size: 10px; cursor: pointer; font-weight: bold; }
@@ -137,9 +137,10 @@
         }
         #chat-header { background: #FF1493; color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         #chat-messages { flex: 1; padding: 15px; overflow-y: auto; background: #fff5f8; display: flex; flex-direction: column; gap: 8px; background-size: cover; background-position: center; }
-        .msg-bubble { padding: 8px 12px; border-radius: 15px; max-width: 80%; font-size: 13px; z-index: 2; display: flex; align-items: center; flex-wrap: wrap; }
-        .msg-me { background: #FF1493; color: white; align-self: flex-end; }
+        .msg-bubble { padding: 8px 12px; border-radius: 15px; max-width: 80%; font-size: 13px; z-index: 2; display: flex; flex-direction: column; align-items: flex-start; }
+        .msg-me { background: #FF1493; color: white; align-self: flex-end; align-items: flex-end;}
         .msg-them { background: #ffdae9; color: #FF1493; align-self: flex-start; }
+        .chat-img { max-width: 100%; border-radius: 10px; margin-top: 5px; border: 1px solid white; }
     </style>
 </head>
 <body>
@@ -198,6 +199,8 @@
         <div id="chat-messages"></div>
         <div class="comment-input-area" style="padding: 10px; background: white;">
             <input type="text" id="chat-input" placeholder="Ton message...">
+            <button onclick="document.getElementById('chatPhotoInput').click()" style="background:none; border:none; font-size:20px; cursor:pointer;">📷</button>
+            <input type="file" id="chatPhotoInput" hidden accept="image/*" onchange="sendPrivatePhoto()">
             <button onclick="ajouterStickerChat()" style="background:none; border:none; font-size:20px; cursor:pointer;">🏷️</button>
             <button onclick="sendPrivateMsg()">OK</button>
         </div>
@@ -216,7 +219,8 @@
                 <img id="profil-banner-img" src="https://i.pinimg.com/736x/8d/e2/2e/8de22e28372652155d3b64c185e33433.jpg">
                 <div class="pfp-container">
                     <img id="pfp-decoration-img" class="pfp-deco" src="" style="display:none;">
-                    <img id="profil-pic-big" src="">
+                    <img id="profil-pic-big" src="" onclick="document.getElementById('changePfpInput').click()">
+                    <input type="file" id="changePfpInput" hidden accept="image/*" onchange="changePfpAfterLogin()">
                 </div>
                 <input type="file" id="bannerInput" hidden accept="image/*" onchange="changeBanner()">
             </div>
@@ -287,14 +291,26 @@
             if (snapshot.exists()) {
                 const data = snapshot.val();
                 if (data.password === pass) {
-                    window.currentUser = user; window.currentProfilePic = data.pp;
-                    localStorage.setItem('nookgram_user', user); localStorage.setItem('nookgram_pass', pass);
+                    window.currentUser = user; 
+                    window.currentProfilePic = data.pp;
+                    localStorage.setItem('nookgram_user', user); 
+                    localStorage.setItem('nookgram_pass', pass);
                     lancerApp();
                 } else if(!automatic) alert("Mot de passe incorrect !");
             } else if(!automatic) {
-                window.currentUser = user; if(!window.currentProfilePic) window.currentProfilePic = "https://via.placeholder.com/100";
-                set(userRef, { name: user, password: pass, pp: window.currentProfilePic, bio: "Ajoute une biographie...", deco: "", stickerBio: "" });
-                localStorage.setItem('nookgram_user', user); localStorage.setItem('nookgram_pass', pass);
+                window.currentUser = user; 
+                if(!window.currentProfilePic) window.currentProfilePic = "https://via.placeholder.com/100";
+                set(userRef, { 
+                    name: user, 
+                    password: pass, 
+                    pp: window.currentProfilePic, 
+                    bio: "Ajoute une biographie...", 
+                    deco: "", 
+                    stickerBio: "",
+                    banner: "https://i.pinimg.com/736x/8d/e2/2e/8de22e28372652155d3b64c185e33433.jpg"
+                });
+                localStorage.setItem('nookgram_user', user); 
+                localStorage.setItem('nookgram_pass', pass);
                 lancerApp();
             }
         }
@@ -353,35 +369,27 @@
             const isMe = (user === window.currentUser);
             document.getElementById('profil-name').innerText = "@" + user.toLowerCase();
             document.getElementById('profil-pic-big').src = pp;
-            
             document.getElementById('edit-bio-btn').style.display = isMe ? "inline-block" : "none";
             document.getElementById('bio-sticker-btn').style.display = isMe ? "inline-block" : "none";
             document.getElementById('edit-deco-btn').style.display = isMe ? "inline-block" : "none";
             document.getElementById('logout-btn').style.display = isMe ? "inline-block" : "none";
             document.getElementById('banner-box').onclick = isMe ? () => document.getElementById('bannerInput').click() : null;
-
-            // Charger la bio et le sticker de bio
             onValue(ref(db, 'users/' + user), (snap) => {
-                const data = snap.val();
+                const data = snap.val(); if(!data) return;
+                document.getElementById('profil-banner-img').src = data.banner || "https://i.pinimg.com/736x/8d/e2/2e/8de22e28372652155d3b64c185e33433.jpg";
                 let bioHTML = data.bio || "Ajoute une biographie...";
                 if(data.stickerBio) bioHTML += `<img src="${data.stickerBio}" class="sticker">`;
                 document.getElementById('profil-bio').innerHTML = bioHTML;
-                
                 const decoImg = document.getElementById('pfp-decoration-img');
-                if(data.deco) { decoImg.src = data.deco; decoImg.style.display = "block"; }
-                else { decoImg.style.display = "none"; }
+                if(data.deco) { decoImg.src = data.deco; decoImg.style.display = "block"; } else { decoImg.style.display = "none"; }
             });
-
-            const pFeed = document.getElementById('profil-feed');
-            pFeed.innerHTML = "";
+            const pFeed = document.getElementById('profil-feed'); pFeed.innerHTML = "";
             onValue(ref(db, 'posts'), (snap) => {
                 pFeed.innerHTML = "";
                 snap.forEach(child => {
-                    const p = child.val();
-                    if(p.user === user) renderPostUI({id: child.key, ...p}, 'profil-feed');
+                    const p = child.val(); if(p.user === user) renderPostUI({id: child.key, ...p}, 'profil-feed');
                 });
             });
-
             calculerStatsProfil(user);
             showPage('page-profil', true); 
         }
@@ -389,33 +397,21 @@
         function calculerStatsProfil(user) {
             onValue(ref(db, 'posts'), (snap) => {
                 let count = 0; let likes = 0;
-                snap.forEach(p => {
-                    if(p.val().user === user) {
-                        count++;
-                        likes += (p.val().likes || 0);
-                    }
-                });
+                snap.forEach(p => { if(p.val().user === user) { count++; likes += (p.val().likes || 0); } });
                 document.getElementById('count-post').innerText = count;
                 document.getElementById('total-likes').innerText = likes;
             });
         }
 
         window.deletePost = (id) => { if(confirm("Supprimer ce post ?")) remove(ref(db, 'posts/' + id)); }
-
         window.actionsHTML = (id, likes) => `<div class="post-actions"><span onclick="toggleLike('${id}', this)">🤍 ${likes} J'aime</span><span onclick="document.getElementById('comment-area-${id}').style.display='block'">💬 Commenter</span></div><div id="comment-area-${id}" class="comment-section" style="display:none;"><div id="comments-list-${id}"></div><div class="comment-input-area"><input type="text" id="input-${id}" placeholder="Écrire..."><button onclick="addComment('${id}')">OK</button></div></div>`;
         
         window.toggleLike = (id, el) => {
             const postRef = ref(db, 'posts/' + id);
             get(postRef).then((snap) => {
-                let p = snap.val();
-                let currentLikes = p.likes || 0;
-                if (el.innerText.includes("🤍")) {
-                    currentLikes++;
-                    el.innerHTML = "❤️ " + currentLikes + " J'aimé";
-                } else {
-                    currentLikes--;
-                    el.innerHTML = "🤍 " + currentLikes + " J'aime";
-                }
+                let p = snap.val(); let currentLikes = p.likes || 0;
+                if (el.innerText.includes("🤍")) { currentLikes++; el.innerHTML = "❤️ " + currentLikes + " J'aimé"; } 
+                else { currentLikes--; el.innerHTML = "🤍 " + currentLikes + " J'aime"; }
                 update(postRef, { likes: currentLikes });
                 const profilName = document.getElementById('profil-name').innerText.replace('@', '');
                 calculerStatsProfil(profilName);
@@ -424,22 +420,18 @@
 
         window.addComment = (id, parentId = null) => {
             const inputId = parentId ? `reply-input-${parentId}` : `input-${id}`;
-            const input = document.getElementById(inputId);
-            if (!input.value) return;
+            const input = document.getElementById(inputId); if (!input.value) return;
             const commentData = { user: window.currentUser, text: input.value, timestamp: Date.now() };
             const path = parentId ? `posts/${id}/comments/${parentId}/replies` : `posts/${id}/comments`;
-            push(ref(db, path), commentData);
-            input.value = "";
+            push(ref(db, path), commentData); input.value = "";
         }
 
         function chargerCommentaires(postId) {
             onValue(ref(db, `posts/${postId}/comments`), (snapshot) => {
-                const list = document.getElementById(`comments-list-${postId}`);
-                if(!list) return;
+                const list = document.getElementById(`comments-list-${postId}`); if(!list) return;
                 list.innerHTML = "";
                 snapshot.forEach(child => {
-                    const c = child.val();
-                    const cid = child.key;
+                    const c = child.val(); const cid = child.key;
                     const delBtn = (c.user === window.currentUser) ? `<button class="del-btn" onclick="deleteComment('${postId}', '${cid}')">✖</button>` : '';
                     const div = document.createElement('div');
                     div.className = 'comment';
@@ -470,9 +462,7 @@
         window.showPage = (id, force = false) => { 
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); 
             document.getElementById(id).classList.add('active'); 
-            if(id === 'page-profil' && !force) {
-                voirProfil(window.currentUser, window.currentProfilePic);
-            }
+            if(id === 'page-profil' && !force) { voirProfil(window.currentUser, window.currentProfilePic); }
         }
         
         window.modifierBio = () => { let n = prompt("Ta nouvelle bio ?"); if (n) set(ref(db, 'users/' + window.currentUser + '/bio'), n); }
@@ -484,7 +474,21 @@
             const file = document.getElementById('bannerInput').files[0];
             if(file){
                 const reader = new FileReader();
-                reader.onload = (e) => { document.getElementById('profil-banner-img').src = e.target.result; };
+                reader.onload = (e) => { update(ref(db, 'users/' + window.currentUser), { banner: e.target.result }); };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        window.changePfpAfterLogin = () => {
+            const file = document.getElementById('changePfpInput').files[0];
+            if(file){
+                const reader = new FileReader();
+                reader.onload = (e) => { 
+                    window.currentProfilePic = e.target.result;
+                    document.getElementById('profil-pic-big').src = e.target.result;
+                    document.getElementById('nav-mini-pp').innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+                    update(ref(db, 'users/' + window.currentUser), { pp: e.target.result });
+                };
                 reader.readAsDataURL(file);
             }
         }
@@ -497,10 +501,7 @@
                 snapshot.forEach(child => {
                     const u = child.val();
                     if(u.name !== window.currentUser) {
-                        list.innerHTML += `<div style="padding:10px; color:#FF1493; display:flex; justify-content:space-between; align-items:center;">
-                            <span>● @${u.name} est en ligne</span>
-                            <button onclick="openChat('${u.name}')" style="background:#FF1493; color:white; border:none; border-radius:10px; padding:5px 10px; cursor:pointer;">✉️ Message</button>
-                        </div>`;
+                        list.innerHTML += `<div style="padding:10px; color:#FF1493; display:flex; justify-content:space-between; align-items:center;"><span>● @${u.name} est en ligne</span><button onclick="openChat('${u.name}')" style="background:#FF1493; color:white; border:none; border-radius:10px; padding:5px 10px; cursor:pointer;">✉️ Message</button></div>`;
                         groupList.innerHTML += `<div class="user-option" onclick="selectUserForGroup(this)" style="padding:10px; cursor:pointer; color:#FF1493; font-weight:bold; border-radius:10px;">@${u.name}</div>`;
                     }
                 });
@@ -513,24 +514,20 @@
             document.getElementById('chat-window').style.display = "flex";
             const chatId = [window.currentUser, chatTarget].sort().join("_");
             onValue(ref(db, 'direct_messages/' + chatId), (snapshot) => {
-                const box = document.getElementById('chat-messages');
-                box.innerHTML = "";
+                const box = document.getElementById('chat-messages'); box.innerHTML = "";
                 snapshot.forEach(child => {
                     const m = child.val();
-                    if(m.sender) {
-                        const div = document.createElement('div');
-                        div.className = `msg-bubble ${m.sender === window.currentUser ? 'msg-me' : 'msg-them'}`;
-                        let content = m.text;
-                        if(m.sticker) content += `<img src="${m.sticker}" class="sticker">`;
-                        div.innerHTML = content;
-                        box.appendChild(div);
-                    }
+                    const div = document.createElement('div');
+                    div.className = `msg-bubble ${m.sender === window.currentUser ? 'msg-me' : 'msg-them'}`;
+                    let content = m.text ? `<div>${m.text}</div>` : "";
+                    if(m.photo) content += `<img src="${m.photo}" class="chat-img">`;
+                    if(m.sticker) content += `<img src="${m.sticker}" class="sticker">`;
+                    div.innerHTML = content; box.appendChild(div);
                 });
                 box.scrollTop = box.scrollHeight;
             });
             onValue(ref(db, 'chat_settings/' + chatId + '/background'), (snap) => {
-                const bg = snap.val();
-                const box = document.getElementById('chat-messages');
+                const bg = snap.val(); const box = document.getElementById('chat-messages');
                 box.style.backgroundImage = bg ? `url(${bg})` : "none";
             });
         }
@@ -539,40 +536,37 @@
             const file = document.getElementById('chatBgInput').files[0];
             const chatId = [window.currentUser, chatTarget].sort().join("_");
             if(file){
-                const reader = new FileReader();
-                reader.onload = (e) => set(ref(db, 'chat_settings/' + chatId + '/background'), e.target.result);
+                const reader = new FileReader(); reader.onload = (e) => set(ref(db, 'chat_settings/' + chatId + '/background'), e.target.result);
                 reader.readAsDataURL(file);
             }
         }
 
-        window.ajouterStickerChat = () => {
-            let s = prompt("Lien du sticker pour ce message :");
-            if(s) window.currentChatSticker = s;
-        }
-
+        window.ajouterStickerChat = () => { let s = prompt("Lien du sticker pour ce message :"); if(s) window.currentChatSticker = s; }
         window.closeChat = () => document.getElementById('chat-window').style.display = "none";
 
         window.sendPrivateMsg = function() {
             const input = document.getElementById('chat-input');
             if (!input.value && !window.currentChatSticker) return;
             const chatId = [window.currentUser, chatTarget].sort().join("_");
-            push(ref(db, 'direct_messages/' + chatId), { 
-                sender: window.currentUser, 
-                text: input.value, 
-                sticker: window.currentChatSticker || "",
-                timestamp: Date.now() 
-            });
-            input.value = "";
-            window.currentChatSticker = "";
+            push(ref(db, 'direct_messages/' + chatId), { sender: window.currentUser, text: input.value, sticker: window.currentChatSticker || "", timestamp: Date.now() });
+            input.value = ""; window.currentChatSticker = "";
+        }
+
+        window.sendPrivatePhoto = () => {
+            const file = document.getElementById('chatPhotoInput').files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const chatId = [window.currentUser, chatTarget].sort().join("_");
+                push(ref(db, 'direct_messages/' + chatId), { sender: window.currentUser, photo: e.target.result, timestamp: Date.now() });
+                document.getElementById('chatPhotoInput').value = "";
+            };
+            reader.readAsDataURL(file);
         }
 
         window.toggleSearchFriend = () => { let b = document.getElementById('search-friend-bar'); b.style.display = (b.style.display === 'none') ? 'block' : 'none'; }
         window.toggleGroupPopup = () => { let p = document.getElementById('group-popup'); p.style.display = (p.style.display === 'none') ? 'block' : 'none'; }
-        window.selectUserForGroup = (el) => { 
-            let u = el.innerText; 
-            if (selectedUsers.includes(u)) { selectedUsers = selectedUsers.filter(x => x !== u); el.style.background = 'none'; } 
-            else { selectedUsers.push(u); el.style.background = '#ffdae9'; } 
-        }
+        window.selectUserForGroup = (el) => { let u = el.innerText; if (selectedUsers.includes(u)) { selectedUsers = selectedUsers.filter(x => x !== u); el.style.background = 'none'; } else { selectedUsers.push(u); el.style.background = '#ffdae9'; } }
         window.validerGroupe = () => { if (selectedUsers.length === 0) return; alert("Groupe créé !"); window.toggleGroupPopup(); document.getElementById('no-msg-text').innerText = "Groupe avec : " + selectedUsers.join(", "); }
     </script>
 </body>
