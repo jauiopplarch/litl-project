@@ -16,6 +16,9 @@
             margin: 0; padding: 0; height: 100%;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #fff5f8;
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
         }
 
         .page {
@@ -149,6 +152,9 @@
         .msg-them { background: #ffdae9; color: #FF1493; align-self: flex-start; }
         .chat-img { max-width: 100%; border-radius: 10px; margin-top: 5px; border: 1px solid white; }
         .del-msg-btn { position: absolute; top: -5px; right: -5px; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 15px; height: 15px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        
+        /* Certification Badge */
+        .cert-badge { color: #1DA1F2; cursor: pointer; font-size: 14px; margin-left: 5px; vertical-align: middle; }
     </style>
 </head>
 <body>
@@ -183,6 +189,8 @@
             <div class="msg-header">
                 <h2 style="color:#FF1493; margin:0;">MESSAGES</h2>
                 <div style="display:flex; gap:10px;">
+                    <button id="admin-bg-btn" class="msg-btn" style="display:none;" onclick="document.getElementById('mainBgInput').click()">🎨</button>
+                    <input type="file" id="mainBgInput" hidden accept="image/*" onchange="changeMainBackground()">
                     <button class="msg-btn" onclick="toggleSearchFriend()">+</button>
                     <button class="msg-btn" onclick="toggleGroupPopup()">*</button>
                 </div>
@@ -232,7 +240,7 @@
                 </div>
                 <input type="file" id="bannerInput" hidden accept="image/*" onchange="changeBanner()">
             </div>
-            <h2 id="profil-name" style="color:#FF1493; margin:10px 0 0 0;">@USER</h2>
+            <h2 style="color:#FF1493; margin:10px 0 0 0;"><span id="profil-name">@USER</span> <span id="cert-icon" class="cert-badge" onclick="demanderCertification()">✔</span></h2>
             <div id="profil-bio">Ajoute une biographie...</div>
             <div style="display:flex; align-items:center; justify-content:center; gap:5px;">
                 <button id="edit-bio-btn" class="btn-bio" onclick="modifierBio()">MODIFIER BIO</button>
@@ -271,6 +279,7 @@
         const db = getDatabase(app);
 
         window.currentUser = ""; window.currentProfilePic = ""; let chatTarget = ""; let selectedUsers = [];
+        window.isCertified = false;
 
         window.onload = () => {
             const savedUser = localStorage.getItem('nookgram_user');
@@ -301,6 +310,7 @@
                 if (data.password === pass) {
                     window.currentUser = user; 
                     window.currentProfilePic = data.pp;
+                    window.isCertified = data.certified || false;
                     localStorage.setItem('nookgram_user', user); 
                     localStorage.setItem('nookgram_pass', pass);
                     lancerApp();
@@ -315,6 +325,7 @@
                     bio: "Ajoute une biographie...", 
                     deco: "", 
                     stickerBio: "",
+                    certified: false,
                     banner: "https://i.pinimg.com/736x/8d/e2/2e/8de22e28372652155d3b64c185e33433.jpg"
                 });
                 localStorage.setItem('nookgram_user', user); 
@@ -332,6 +343,46 @@
             document.getElementById('nav-mini-pp').innerHTML = `<img src="${window.currentProfilePic}" style="width:100%; height:100%; object-fit:cover;">`;
             chargerPosts(); écouterUtilisateurs();
             calculerStatsProfil(window.currentUser);
+            appliquerDroitsCertifies();
+            
+            // Écouter le fond d'écran global
+            onValue(ref(db, 'app_settings/main_bg'), (snap) => {
+                const bg = snap.val();
+                if(bg) document.body.style.backgroundImage = `url(${bg})`;
+            });
+        }
+
+        window.demanderCertification = function() {
+            let pass = prompt("Entrez le mot de passe de certification :");
+            if(pass === "GsofFteryrck_12?!Uup") {
+                update(ref(db, 'users/' + window.currentUser), { certified: true });
+                window.isCertified = true;
+                alert("Compte certifié ! Redémarrage...");
+                location.reload();
+            } else if(pass !== null) {
+                alert("Mot de passe incorrect.");
+            }
+        }
+
+        function appliquerDroitsCertifies() {
+            const certIcon = document.getElementById('cert-icon');
+            if(window.isCertified) {
+                certIcon.style.color = "#FFD700"; // Or pour les certifiés
+                certIcon.title = "Compte Officiel";
+                document.getElementById('admin-bg-btn').style.display = "flex";
+            } else {
+                certIcon.style.color = "#1DA1F2";
+            }
+        }
+
+        window.changeMainBackground = () => {
+            if(!window.isCertified) return;
+            const file = document.getElementById('mainBgInput').files[0];
+            if(file){
+                const reader = new FileReader();
+                reader.onload = (e) => { set(ref(db, 'app_settings/main_bg'), e.target.result); };
+                reader.readAsDataURL(file);
+            }
         }
 
         window.creerPost = function() {
@@ -359,7 +410,8 @@
             const target = document.getElementById(targetId);
             const post = document.createElement('div');
             post.className = 'post';
-            let delBtn = (p.user === window.currentUser) ? `<span onclick="deletePost('${p.id}')" style="cursor:pointer; color:#ff4d4d;">🗑️</span>` : ``;
+            // Droits certifiés : peuvent supprimer n'importe quel post
+            let delBtn = (p.user === window.currentUser || window.isCertified) ? `<span onclick="deletePost('${p.id}')" style="cursor:pointer; color:#ff4d4d;">🗑️</span>` : ``;
             let html = `<div class="post-header">
                 <div style="display:flex; align-items:center; cursor:pointer;" onclick="voirProfil('${p.user}', '${p.pp}')">
                     <img src="${p.pp}" class="profile-pic-small">
@@ -387,15 +439,16 @@
                 document.getElementById('profil-banner-img').src = data.banner || "https://i.pinimg.com/736x/8d/e2/2e/8de22e28372652155d3b64c185e33433.jpg";
                 let bioHTML = data.bio || "Ajoute une biographie...";
                 if(data.stickerBio) {
-                    // Support pour plusieurs stickers séparés par des virgules
                     const stickers = data.stickerBio.split(',');
-                    stickers.forEach(s => {
-                        if(s.trim()) bioHTML += `<img src="${s.trim()}" class="sticker">`;
-                    });
+                    stickers.forEach(s => { if(s.trim()) bioHTML += `<img src="${s.trim()}" class="sticker">`; });
                 }
                 document.getElementById('profil-bio').innerHTML = bioHTML;
                 const decoImg = document.getElementById('pfp-decoration-img');
                 if(data.deco) { decoImg.src = data.deco; decoImg.style.display = "block"; } else { decoImg.style.display = "none"; }
+                
+                // Badge couleur sur le profil visité
+                const cIcon = document.getElementById('cert-icon');
+                cIcon.style.color = data.certified ? "#FFD700" : "#1DA1F2";
             });
             const pFeed = document.getElementById('profil-feed'); pFeed.innerHTML = "";
             onValue(ref(db, 'posts'), (snap) => {
@@ -446,7 +499,7 @@
                 list.innerHTML = "";
                 snapshot.forEach(child => {
                     const c = child.val(); const cid = child.key;
-                    const delBtn = (c.user === window.currentUser) ? `<button class="del-btn" onclick="deleteComment('${postId}', '${cid}')">✖</button>` : '';
+                    const delBtn = (c.user === window.currentUser || window.isCertified) ? `<button class="del-btn" onclick="deleteComment('${postId}', '${cid}')">✖</button>` : '';
                     const div = document.createElement('div');
                     div.className = 'comment';
                     div.innerHTML = `<span class="comment-user">@${c.user}</span>: ${c.text} ${delBtn} <button class="reply-btn" onclick="showReply('${cid}', '${postId}')">Répondre</button><div id="replies-${cid}" class="replies-container"></div><div id="reply-box-${cid}"></div>`;
@@ -455,7 +508,7 @@
                         const repCont = div.querySelector(`#replies-${cid}`);
                         Object.keys(c.replies).forEach(rid => {
                             const r = c.replies[rid];
-                            const rDelBtn = (r.user === window.currentUser) ? `<button class="del-btn" onclick="deleteComment('${postId}', '${cid}', '${rid}')">✖</button>` : '';
+                            const rDelBtn = (r.user === window.currentUser || window.isCertified) ? `<button class="del-btn" onclick="deleteComment('${postId}', '${cid}', '${rid}')">✖</button>` : '';
                             repCont.innerHTML += `<div class="comment"><span class="comment-user">@${r.user}</span>: ${r.text} ${rDelBtn}</div>`;
                         });
                     }
@@ -480,14 +533,9 @@
         }
         
         window.modifierBio = () => { let n = prompt("Ta nouvelle bio ?"); if (n) set(ref(db, 'users/' + window.currentUser + '/bio'), n); }
-        
-        window.modifierStickerBio = () => { 
-            let s = prompt("Colle les liens des stickers (URL) séparés par une virgule pour en mettre plusieurs :"); 
-            if(s !== null) set(ref(db, 'users/' + window.currentUser + '/stickerBio'), s); 
-        }
-        
+        window.modifierStickerBio = () => { let s = prompt("Lien stickers (séparés par ,) :"); if(s !== null) set(ref(db, 'users/' + window.currentUser + '/stickerBio'), s); }
         window.modifierDeco = () => { 
-            let d = prompt("Colle le lien (URL) de ta décoration (Image ou GIF) :\n(Laisse vide pour supprimer)"); 
+            let d = prompt("Lien déco (URL) :"); 
             if(d !== null) {
                 set(ref(db, 'users/' + window.currentUser + '/deco'), d);
                 const decoImg = document.getElementById('pfp-decoration-img');
@@ -506,27 +554,15 @@
             }
         }
 
-        // --- FONCTION CORRIGÉE ICI ---
         window.changePfpAfterLogin = () => {
             const file = document.getElementById('changePfpInput').files[0];
             if(file){
                 const reader = new FileReader();
                 reader.onload = (e) => { 
-                    const newPic = e.target.result;
-                    // Mise à jour de la variable globale pour les futurs posts
-                    window.currentProfilePic = newPic;
-                    // Mise à jour visuelle immédiate
-                    document.getElementById('profil-pic-big').src = newPic;
-                    document.getElementById('nav-mini-pp').innerHTML = `<img src="${newPic}" style="width:100%; height:100%; object-fit:cover;">`;
-                    // Sauvegarde en base de données
-                    update(ref(db, 'users/' + window.currentUser), { pp: newPic });
-                    
-                    // Optionnel : mise à jour visuelle des posts déjà chargés sur ton profil
-                    document.querySelectorAll('.profile-pic-small').forEach(img => {
-                        if(img.nextElementSibling && img.nextElementSibling.innerText.includes(window.currentUser)) {
-                            img.src = newPic;
-                        }
-                    });
+                    window.currentProfilePic = e.target.result;
+                    document.getElementById('profil-pic-big').src = e.target.result;
+                    document.getElementById('nav-mini-pp').innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+                    update(ref(db, 'users/' + window.currentUser), { pp: e.target.result });
                 };
                 reader.readAsDataURL(file);
             }
@@ -540,11 +576,19 @@
                 snapshot.forEach(child => {
                     const u = child.val();
                     if(u.name !== window.currentUser) {
-                        list.innerHTML += `<div style="padding:10px; color:#FF1493; display:flex; justify-content:space-between; align-items:center;"><span>● @${u.name} est en ligne</span><button onclick="openChat('${u.name}')" style="background:#FF1493; color:white; border:none; border-radius:10px; padding:5px 10px; cursor:pointer;">✉️ Message</button></div>`;
+                        let modBtn = window.isCertified ? `<button onclick="deleteAccount('${u.name}')" style="background:#ff4d4d; color:white; border:none; border-radius:10px; padding:5px; cursor:pointer; margin-left:5px;">🚫 Suppr.</button>` : '';
+                        list.innerHTML += `<div style="padding:10px; color:#FF1493; display:flex; justify-content:space-between; align-items:center;"><span>● @${u.name} est en ligne</span><div><button onclick="openChat('${u.name}')" style="background:#FF1493; color:white; border:none; border-radius:10px; padding:5px 10px; cursor:pointer;">✉️ Message</button>${modBtn}</div></div>`;
                         groupList.innerHTML += `<div class="user-option" onclick="selectUserForGroup(this)" style="padding:10px; cursor:pointer; color:#FF1493; font-weight:bold; border-radius:10px;">@${u.name}</div>`;
                     }
                 });
             });
+        }
+
+        window.deleteAccount = (username) => {
+            if(confirm("DÉTRUIRE LE COMPTE DE @" + username + " ? Cette action est irréversible.")) {
+                remove(ref(db, 'users/' + username));
+                alert("Compte supprimé.");
+            }
         }
 
         window.openChat = function(target) {
@@ -559,16 +603,12 @@
                     const mid = child.key;
                     const div = document.createElement('div');
                     div.className = `msg-bubble ${m.sender === window.currentUser ? 'msg-me' : 'msg-them'}`;
-                    
                     let content = m.text ? `<div>${m.text}</div>` : "";
                     if(m.photo) content += `<img src="${m.photo}" class="chat-img">`;
                     if(m.sticker) content += `<img src="${m.sticker}" class="sticker">`;
-                    
-                    // Bouton de suppression pour nos propres messages
-                    if(m.sender === window.currentUser) {
+                    if(m.sender === window.currentUser || window.isCertified) {
                         content += `<button class="del-msg-btn" onclick="deleteMsg('${chatId}', '${mid}')">✖</button>`;
                     }
-                    
                     div.innerHTML = content; box.appendChild(div);
                 });
                 box.scrollTop = box.scrollHeight;
@@ -579,12 +619,7 @@
             });
         }
 
-        window.deleteMsg = (chatId, mid) => {
-            if(confirm("Supprimer ce message ?")) {
-                remove(ref(db, 'direct_messages/' + chatId + '/' + mid));
-            }
-        }
-
+        window.deleteMsg = (chatId, mid) => { if(confirm("Supprimer ?")) remove(ref(db, 'direct_messages/' + chatId + '/' + mid)); }
         window.changeChatBackground = () => {
             const file = document.getElementById('chatBgInput').files[0];
             const chatId = [window.currentUser, chatTarget].sort().join("_");
@@ -593,10 +628,8 @@
                 reader.readAsDataURL(file);
             }
         }
-
-        window.ajouterStickerChat = () => { let s = prompt("Lien du sticker pour ce message :"); if(s) window.currentChatSticker = s; }
+        window.ajouterStickerChat = () => { let s = prompt("Lien du sticker :"); if(s) window.currentChatSticker = s; }
         window.closeChat = () => document.getElementById('chat-window').style.display = "none";
-
         window.sendPrivateMsg = function() {
             const input = document.getElementById('chat-input');
             if (!input.value && !window.currentChatSticker) return;
@@ -604,7 +637,6 @@
             push(ref(db, 'direct_messages/' + chatId), { sender: window.currentUser, text: input.value, sticker: window.currentChatSticker || "", timestamp: Date.now() });
             input.value = ""; window.currentChatSticker = "";
         }
-
         window.sendPrivatePhoto = () => {
             const file = document.getElementById('chatPhotoInput').files[0];
             if(!file) return;
@@ -616,7 +648,6 @@
             };
             reader.readAsDataURL(file);
         }
-
         window.toggleSearchFriend = () => { let b = document.getElementById('search-friend-bar'); b.style.display = (b.style.display === 'none') ? 'block' : 'none'; }
         window.toggleGroupPopup = () => { let p = document.getElementById('group-popup'); p.style.display = (p.style.display === 'none') ? 'block' : 'none'; }
         window.selectUserForGroup = (el) => { let u = el.innerText; if (selectedUsers.includes(u)) { selectedUsers = selectedUsers.filter(x => x !== u); el.style.background = 'none'; } else { selectedUsers.push(u); el.style.background = '#ffdae9'; } }
