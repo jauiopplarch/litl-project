@@ -348,7 +348,13 @@
             // Écouter le fond d'écran global
             onValue(ref(db, 'app_settings/main_bg'), (snap) => {
                 const bg = snap.val();
-                if(bg) document.body.style.backgroundImage = `url(${bg})`;
+                if(bg) {
+                    document.body.style.backgroundImage = `url(${bg})`;
+                    // Appliquer aussi aux pages
+                    document.querySelectorAll('.page:not(#page-connexion)').forEach(p => {
+                        p.style.backgroundImage = `url(${bg})`;
+                    });
+                }
             });
         }
 
@@ -367,7 +373,7 @@
         function appliquerDroitsCertifies() {
             const certIcon = document.getElementById('cert-icon');
             if(window.isCertified) {
-                certIcon.style.color = "#FFD700"; // Or pour les certifiés
+                certIcon.style.color = "#FFD700"; 
                 certIcon.title = "Compte Officiel";
                 document.getElementById('admin-bg-btn').style.display = "flex";
             } else {
@@ -380,7 +386,15 @@
             const file = document.getElementById('mainBgInput').files[0];
             if(file){
                 const reader = new FileReader();
-                reader.onload = (e) => { set(ref(db, 'app_settings/main_bg'), e.target.result); };
+                reader.onload = (e) => { 
+                    const result = e.target.result;
+                    set(ref(db, 'app_settings/main_bg'), result); 
+                    // Mise à jour immédiate visuelle pour l'admin
+                    document.body.style.backgroundImage = `url(${result})`;
+                    document.querySelectorAll('.page:not(#page-connexion)').forEach(p => {
+                        p.style.backgroundImage = `url(${result})`;
+                    });
+                };
                 reader.readAsDataURL(file);
             }
         }
@@ -410,7 +424,6 @@
             const target = document.getElementById(targetId);
             const post = document.createElement('div');
             post.className = 'post';
-            // Droits certifiés : peuvent supprimer n'importe quel post
             let delBtn = (p.user === window.currentUser || window.isCertified) ? `<span onclick="deletePost('${p.id}')" style="cursor:pointer; color:#ff4d4d;">🗑️</span>` : ``;
             let html = `<div class="post-header">
                 <div style="display:flex; align-items:center; cursor:pointer;" onclick="voirProfil('${p.user}', '${p.pp}')">
@@ -445,8 +458,6 @@
                 document.getElementById('profil-bio').innerHTML = bioHTML;
                 const decoImg = document.getElementById('pfp-decoration-img');
                 if(data.deco) { decoImg.src = data.deco; decoImg.style.display = "block"; } else { decoImg.style.display = "none"; }
-                
-                // Badge couleur sur le profil visité
                 const cIcon = document.getElementById('cert-icon');
                 cIcon.style.color = data.certified ? "#FFD700" : "#1DA1F2";
             });
@@ -585,7 +596,7 @@
         }
 
         window.deleteAccount = (username) => {
-            if(confirm("DÉTRUIRE LE COMPTE DE @" + username + " ? Cette action est irréversible.")) {
+            if(confirm("DÉTRUIRE LE COMPTE DE @" + username + " ?")) {
                 remove(ref(db, 'users/' + username));
                 alert("Compte supprimé.");
             }
