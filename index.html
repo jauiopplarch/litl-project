@@ -235,7 +235,7 @@
                 <img id="profil-banner-img" src="https://i.pinimg.com/736x/8d/e2/2e/8de22e28372652155d3b64c185e33433.jpg">
                 <div class="pfp-container">
                     <img id="pfp-decoration-img" class="pfp-deco" src="" style="display:none;">
-                    <img id="profil-pic-big" src="" onclick="document.getElementById('changePfpInput').click()">
+                    <img id="profil-pic-big" src="" onclick="document.getElementById('changePfpInput').click()" style="position: relative; z-index: 10; cursor: pointer;">
                     <input type="file" id="changePfpInput" hidden accept="image/*" onchange="changePfpAfterLogin()">
                 </div>
                 <input type="file" id="bannerInput" hidden accept="image/*" onchange="changeBanner()">
@@ -570,10 +570,24 @@
             if(file){
                 const reader = new FileReader();
                 reader.onload = (e) => { 
-                    window.currentProfilePic = e.target.result;
-                    document.getElementById('profil-pic-big').src = e.target.result;
-                    document.getElementById('nav-mini-pp').innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
-                    update(ref(db, 'users/' + window.currentUser), { pp: e.target.result });
+                    const newPic = e.target.result;
+                    window.currentProfilePic = newPic;
+                    document.getElementById('profil-pic-big').src = newPic;
+                    document.getElementById('nav-mini-pp').innerHTML = `<img src="${newPic}" style="width:100%; height:100%; object-fit:cover;">`;
+                    
+                    // 1. Update profil utilisateur
+                    update(ref(db, 'users/' + window.currentUser), { pp: newPic });
+
+                    // 2. Update tous les posts de l'utilisateur pour que la PP change partout
+                    get(ref(db, 'posts')).then((snap) => {
+                        if(snap.exists()){
+                            snap.forEach((postChild) => {
+                                if(postChild.val().user === window.currentUser){
+                                    update(ref(db, 'posts/' + postChild.key), { pp: newPic });
+                                }
+                            });
+                        }
+                    });
                 };
                 reader.readAsDataURL(file);
             }
