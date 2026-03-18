@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>jayGram - Modern & Fixed Replies</title>
     
-    <link rel="icon" type="image/jpg" href="https://i.pinimg.com/736x/af/a3/24/afa324dff15091f93624bb470d60a592.jpg">
-    <link rel="apple-touch-icon" href="https://i.pinimg.com/736x/af/a3/24/afa324dff15091f93624bb470d60a592.jpg">
+    <link rel="icon" type="image/jpg" href="https://i.pinimg.com/736x/af/a3/24/afa324ff15091f93624bb470d60a592.jpg">
+    <link rel="apple-touch-icon" href="https://i.pinimg.com/736x/af/a3/24/afa324ff15091f93624bb470d60a592.jpg">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="jayGram">
@@ -58,12 +58,29 @@
             image-rendering: pixelated; box-shadow: 4px 4px 0px #FF1493;
         }
 
-        #profile-pic-preview, .profile-pic-small, #profil-pic-big, #nav-mini-pp { border-radius: 50% !important; }
+        #profile-pic-preview, .profile-pic-small, #profil-pic-big, #nav-mini-pp, .chat-pp-mini { border-radius: 50% !important; }
 
-        .pfp-container { position: absolute; bottom: -45px; left: 50%; transform: translateX(-50%); width: 100px; height: 100px; }
+        .pfp-container { position: absolute; bottom: -45px; left: 50%; transform: translateX(-50%); width: 100px; height: 100px; z-index: 2; }
+        
         .pfp-deco {
-            position: absolute; top: -10%; left: -10%; width: 120%; height: 120%;
-            pointer-events: none; z-index: 5; object-fit: contain;
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 180px; 
+            height: 180px;
+            z-index: 10; 
+            object-fit: contain;
+            cursor: move;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .deco-mini {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            object-fit: contain;
         }
 
         /* --- STICKERS --- */
@@ -117,6 +134,7 @@
         .banner-container {
             width: calc(100% + 50px); height: 100px; margin: -25px -25px 50px -25px;
             background: #ffdae9; position: relative; border-bottom: 2px solid #FF1493;
+            overflow: visible; 
         }
         #profil-banner-img { width: 100%; height: 100%; object-fit: cover; }
         #profil-pic-big { width: 100%; height: 100%; border: 4px solid white; object-fit: cover; background: white; cursor: pointer; }
@@ -128,7 +146,7 @@
         .msg-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffdae9; padding-bottom: 10px; margin-bottom: 15px; }
         .msg-btn { background: #FF1493; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        #group-popup {
+        #group-popup, #group-profile-popup {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: white; border: 2px solid #FF1493; border-radius: 30px; padding: 25px;
             z-index: 2000; width: 80%; max-width: 300px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
@@ -145,7 +163,7 @@
             background: white; border: 2px solid #FF1493; border-radius: 25px; width: 90%; max-width: 350px;
             height: 450px; z-index: 3000; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
-        #chat-header { background: #FF1493; color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        #chat-header { background: #FF1493; color: white; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         #chat-messages { flex: 1; padding: 15px; overflow-y: auto; background: #fff5f8; display: flex; flex-direction: column; gap: 8px; background-size: cover; background-position: center; }
         .msg-bubble { padding: 8px 12px; border-radius: 15px; max-width: 80%; font-size: 13px; z-index: 2; display: flex; flex-direction: column; position: relative; }
         .msg-me { background: #FF1493; color: white; align-self: flex-end; align-items: flex-end;}
@@ -153,8 +171,26 @@
         .chat-img { max-width: 100%; border-radius: 10px; margin-top: 5px; border: 1px solid white; }
         .del-msg-btn { position: absolute; top: -5px; right: -5px; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 15px; height: 15px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         
+        .chat-pp-mini-container {
+            position: relative;
+            width: 35px;
+            height: 35px;
+            background: white;
+            border-radius: 50%;
+            border: 2px solid white;
+            overflow: visible; 
+        }
+        .chat-pp-mini {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
         /* Certification Badge */
         .cert-badge { color: #1DA1F2; cursor: pointer; font-size: 14px; margin-left: 5px; vertical-align: middle; }
+
+        /* Style spécifique Republication */
+        .repost-badge { font-size: 10px; color: #888; margin-bottom: 5px; font-weight: bold; display: block; }
     </style>
 </head>
 <body>
@@ -199,6 +235,7 @@
                 <input type="text" id="friend-search-input" placeholder="Rechercher un pseudo...">
             </div>
             <div id="online-users-list"></div>
+            <div id="groups-list"></div>
             <p id="no-msg-text" style="color:#999; font-size: 14px;">Connecte-toi pour voir les autres.</p>
         </div>
     </div>
@@ -206,6 +243,10 @@
     <div id="chat-window">
         <div id="chat-header">
             <div style="display:flex; align-items:center; gap:10px;">
+                <div class="chat-pp-mini-container" id="chat-header-pp-box">
+                    <img id="chat-header-pp" class="chat-pp-mini" src="">
+                    <div id="chat-header-deco-layer" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
+                </div>
                 <span id="chat-with-name">@User</span>
                 <button onclick="document.getElementById('chatBgInput').click()" style="background:none; border:none; cursor:pointer; font-size:18px;" title="Changer fond d'écran">🖼️</button>
                 <input type="file" id="chatBgInput" hidden accept="image/*" onchange="changeChatBackground()">
@@ -224,18 +265,31 @@
 
     <div id="group-popup">
         <h3 style="color:#FF1493; margin-top:0;">CRÉER UN GROUPE</h3>
-        <div id="users-list-group"></div>
+        <input type="text" id="new-group-name" placeholder="Nom du groupe...">
+        <div id="users-list-group" style="max-height:150px; overflow-y:auto; border:1px solid #ffdae9; border-radius:10px; margin:10px 0;"></div>
         <button onclick="validerGroupe()" style="background:#FF1493; color:white; border:none; padding:12px; border-radius:15px; font-weight:bold; cursor:pointer; width:100%; margin-top:15px;">CRÉER LE GROUPE</button>
         <button onclick="toggleGroupPopup()" style="background:none; border:none; color:#FF1493; font-size:10px; text-decoration:underline; cursor:pointer; margin-top:10px;">ANNULER</button>
+    </div>
+
+    <div id="group-profile-popup">
+        <h3 style="color:#FF1493; margin-top:0;">PROFIL DU GROUPE</h3>
+        <img id="group-pp-preview" src="https://via.placeholder.com/100" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #FF1493; margin-bottom:10px;">
+        <input type="file" id="group-pp-input" accept="image/*" onchange="previewGroupPic()" style="font-size:10px; margin-bottom:10px;">
+        <input type="text" id="edit-group-name" placeholder="Nom du groupe">
+        <button onclick="sauvegarderProfilGroupe()" style="background:#FF1493; color:white; border:none; padding:12px; border-radius:15px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px;">SAUVEGARDER</button>
+        <button onclick="supprimerGroupe()" style="background:#ff4d4d; color:white; border:none; padding:12px; border-radius:15px; font-weight:bold; cursor:pointer; width:100%; margin-top:10px;">SUPPRIMER LE GROUPE</button>
+        <button onclick="document.getElementById('group-profile-popup').style.display='none'" style="background:none; border:none; color:#FF1493; font-size:10px; text-decoration:underline; cursor:pointer; margin-top:10px;">FERMER</button>
     </div>
 
     <div id="page-profil" class="page">
         <div class="card">
             <div class="banner-container" id="banner-box">
                 <img id="profil-banner-img" src="https://i.pinimg.com/736x/8d/e2/2e/8de22e28372652155d3b64c185e33433.jpg">
+                
+                <div id="deco-container-layer" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
+
                 <div class="pfp-container">
-                    <img id="pfp-decoration-img" class="pfp-deco" src="" style="display:none;">
-                    <img id="profil-pic-big" src="" onclick="document.getElementById('changePfpInput').click()" style="position: relative; z-index: 10; cursor: pointer;">
+                    <img id="profil-pic-big" src="" onclick="document.getElementById('changePfpInput').click()">
                     <input type="file" id="changePfpInput" hidden accept="image/*" onchange="changePfpAfterLogin()">
                 </div>
                 <input type="file" id="bannerInput" hidden accept="image/*" onchange="changeBanner()">
@@ -245,7 +299,8 @@
             <div style="display:flex; align-items:center; justify-content:center; gap:5px;">
                 <button id="edit-bio-btn" class="btn-bio" onclick="modifierBio()">MODIFIER BIO</button>
                 <button id="bio-sticker-btn" class="btn-sticker" onclick="modifierStickerBio()">🏷️</button>
-                <button id="edit-deco-btn" class="btn-deco" onclick="modifierDeco()">✨</button>
+                <button id="edit-deco-btn" class="btn-deco" onclick="modifierDeco()">✨ +</button>
+                <button id="clear-deco-btn" class="btn-deco" onclick="toutSupprimerDeco()" style="background:#ff4d4d; color:white; border:none;">🗑️</button>
             </div>
             <div style="display:flex; justify-content:space-around; margin:20px 0; border-top: 1px solid rgba(0,0,0,0.05); padding-top:15px;">
                 <div><b id="count-post" style="color:#FF1493; font-size:20px;">0</b><br><small>POSTS</small></div>
@@ -280,6 +335,9 @@
 
         window.currentUser = ""; window.currentProfilePic = ""; let chatTarget = ""; let selectedUsers = [];
         window.isCertified = false;
+        let activeDecos = []; 
+        let isGroupChat = false;
+        let currentGroupId = "";
 
         window.onload = () => {
             const savedUser = localStorage.getItem('nookgram_user');
@@ -323,7 +381,7 @@
                     password: pass, 
                     pp: window.currentProfilePic, 
                     bio: "Ajoute une biographie...", 
-                    deco: "", 
+                    decos: [], 
                     stickerBio: "",
                     certified: false,
                     banner: "https://i.pinimg.com/736x/8d/e2/2e/8de22e28372652155d3b64c185e33433.jpg"
@@ -341,16 +399,14 @@
             document.getElementById('profil-name').innerText = "@" + window.currentUser.toLowerCase();
             document.getElementById('profil-pic-big').src = window.currentProfilePic;
             document.getElementById('nav-mini-pp').innerHTML = `<img src="${window.currentProfilePic}" style="width:100%; height:100%; object-fit:cover;">`;
-            chargerPosts(); écouterUtilisateurs();
+            chargerPosts(); écouterUtilisateurs(); écouterGroupes();
             calculerStatsProfil(window.currentUser);
             appliquerDroitsCertifies();
             
-            // Écouter le fond d'écran global
             onValue(ref(db, 'app_settings/main_bg'), (snap) => {
                 const bg = snap.val();
                 if(bg) {
                     document.body.style.backgroundImage = `url(${bg})`;
-                    // Appliquer aussi aux pages
                     document.querySelectorAll('.page:not(#page-connexion)').forEach(p => {
                         p.style.backgroundImage = `url(${bg})`;
                     });
@@ -389,7 +445,6 @@
                 reader.onload = (e) => { 
                     const result = e.target.result;
                     set(ref(db, 'app_settings/main_bg'), result); 
-                    // Mise à jour immédiate visuelle pour l'admin
                     document.body.style.backgroundImage = `url(${result})`;
                     document.querySelectorAll('.page:not(#page-connexion)').forEach(p => {
                         p.style.backgroundImage = `url(${result})`;
@@ -403,7 +458,7 @@
             const text = document.getElementById('postText').value;
             const imgInput = document.getElementById('postImage');
             if (!text && !imgInput.files[0]) return;
-            const postData = { text: text, user: window.currentUser, pp: window.currentProfilePic, timestamp: Date.now(), img: "", likes: 0 };
+            const postData = { text: text, user: window.currentUser, pp: window.currentProfilePic, timestamp: Date.now(), img: "", likes: 0, repostFrom: "" };
             if (imgInput.files[0]) {
                 const reader = new FileReader();
                 reader.onload = (e) => { postData.img = e.target.result; push(ref(db, 'posts'), postData); };
@@ -424,16 +479,21 @@
             const target = document.getElementById(targetId);
             const post = document.createElement('div');
             post.className = 'post';
+            
+            let repostBadge = p.repostFrom ? `<span class="repost-badge">🔁 Republié par @${p.user}</span>` : "";
             let delBtn = (p.user === window.currentUser || window.isCertified) ? `<span onclick="deletePost('${p.id}')" style="cursor:pointer; color:#ff4d4d;">🗑️</span>` : ``;
-            let html = `<div class="post-header">
-                <div style="display:flex; align-items:center; cursor:pointer;" onclick="voirProfil('${p.user}', '${p.pp}')">
-                    <img src="${p.pp}" class="profile-pic-small">
-                    <span>@${p.user}</span>
-                </div>
-                ${delBtn}
-            </div><div>${p.text}</div>`;
+            
+            let html = `
+                ${repostBadge}
+                <div class="post-header">
+                    <div style="display:flex; align-items:center; cursor:pointer;" onclick="voirProfil('${p.user}', '${p.pp}')">
+                        <img src="${p.pp}" class="profile-pic-small">
+                        <span>@${p.user}</span>
+                    </div>
+                    ${delBtn}
+                </div><div>${p.text}</div>`;
             if (p.img) html += `<img src="${p.img}" class="post-img">`;
-            post.innerHTML = html + actionsHTML(p.id, p.likes || 0);
+            post.innerHTML = html + actionsHTML(p, p.likes || 0);
             target.appendChild(post);
             chargerCommentaires(p.id);
         }
@@ -445,8 +505,10 @@
             document.getElementById('edit-bio-btn').style.display = isMe ? "inline-block" : "none";
             document.getElementById('bio-sticker-btn').style.display = isMe ? "inline-block" : "none";
             document.getElementById('edit-deco-btn').style.display = isMe ? "inline-block" : "none";
+            document.getElementById('clear-deco-btn').style.display = isMe ? "inline-block" : "none";
             document.getElementById('logout-btn').style.display = isMe ? "inline-block" : "none";
             document.getElementById('banner-box').onclick = isMe ? () => document.getElementById('bannerInput').click() : null;
+            
             onValue(ref(db, 'users/' + user), (snap) => {
                 const data = snap.val(); if(!data) return;
                 document.getElementById('profil-banner-img').src = data.banner || "https://i.pinimg.com/736x/8d/e2/2e/8de22e28372652155d3b64c185e33433.jpg";
@@ -456,8 +518,16 @@
                     stickers.forEach(s => { if(s.trim()) bioHTML += `<img src="${s.trim()}" class="sticker">`; });
                 }
                 document.getElementById('profil-bio').innerHTML = bioHTML;
-                const decoImg = document.getElementById('pfp-decoration-img');
-                if(data.deco) { decoImg.src = data.deco; decoImg.style.display = "block"; } else { decoImg.style.display = "none"; }
+                
+                const layer = document.getElementById('deco-container-layer');
+                layer.innerHTML = "";
+                activeDecos = [];
+                if(data.decos) {
+                    data.decos.forEach((d, index) => {
+                        creerElementDeco(d, layer, isMe, index, user);
+                    });
+                }
+                
                 const cIcon = document.getElementById('cert-icon');
                 cIcon.style.color = data.certified ? "#FFD700" : "#1DA1F2";
             });
@@ -472,6 +542,81 @@
             showPage('page-profil', true); 
         }
 
+        function creerElementDeco(data, container, editable, index, profileOwner) {
+            const img = document.createElement('img');
+            img.src = data.url;
+            img.className = 'pfp-deco';
+            
+            let decoObj = { 
+                url: data.url, 
+                x: data.x || 0, 
+                y: data.y || 0, 
+                scale: data.scale || 1.5 
+            };
+            
+            img.style.transform = `translate(${decoObj.x}px, ${decoObj.y}px) scale(${decoObj.scale})`;
+            container.appendChild(img);
+            activeDecos.push(decoObj);
+
+            if(editable) {
+                let isDragging = false;
+                let startX, startY;
+
+                const onStart = (e) => {
+                    isDragging = true;
+                    const cx = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+                    const cy = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+                    startX = cx - decoObj.x;
+                    startY = cy - decoObj.y;
+                    img.style.zIndex = 1000;
+                };
+
+                const onMove = (e) => {
+                    if(!isDragging) return;
+                    const cx = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+                    const cy = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+                    decoObj.x = cx - startX;
+                    decoObj.y = cy - startY;
+                    img.style.transform = `translate(${decoObj.x}px, ${decoObj.y}px) scale(${decoObj.scale})`;
+                };
+
+                const onEnd = () => {
+                    if(isDragging) {
+                        isDragging = false;
+                        img.style.zIndex = 10;
+                        sauvegarderDecosFirebase();
+                    }
+                };
+
+                img.addEventListener('mousedown', onStart);
+                img.addEventListener('touchstart', onStart);
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('touchmove', onMove, {passive: false});
+                window.addEventListener('mouseup', onEnd);
+                window.addEventListener('touchend', onEnd);
+
+                img.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    decoObj.scale += e.deltaY > 0 ? -0.1 : 0.1;
+                    decoObj.scale = Math.min(Math.max(0.2, decoObj.scale), 5);
+                    img.style.transform = `translate(${decoObj.x}px, ${decoObj.y}px) scale(${decoObj.scale})`;
+                    sauvegarderDecosFirebase();
+                }, { passive: false });
+                
+                img.addEventListener('dblclick', () => {
+                    if(confirm("Supprimer cette déco ?")) {
+                        activeDecos = activeDecos.filter(d => d !== decoObj);
+                        img.remove();
+                        sauvegarderDecosFirebase();
+                    }
+                });
+            }
+        }
+
+        function sauvegarderDecosFirebase() {
+            set(ref(db, 'users/' + window.currentUser + '/decos'), activeDecos);
+        }
+
         function calculerStatsProfil(user) {
             onValue(ref(db, 'posts'), (snap) => {
                 let count = 0; let likes = 0;
@@ -482,7 +627,43 @@
         }
 
         window.deletePost = (id) => { if(confirm("Supprimer ce post ?")) remove(ref(db, 'posts/' + id)); }
-        window.actionsHTML = (id, likes) => `<div class="post-actions"><span onclick="toggleLike('${id}', this)">🤍 ${likes} J'aime</span><span onclick="document.getElementById('comment-area-${id}').style.display='block'">💬 Commenter</span></div><div id="comment-area-${id}" class="comment-section" style="display:none;"><div id="comments-list-${id}"></div><div class="comment-input-area"><input type="text" id="input-${id}" placeholder="Écrire..."><button onclick="addComment('${id}')">OK</button></div></div>`;
+        
+        window.actionsHTML = (p, likes) => {
+            const id = p.id;
+            return `
+                <div class="post-actions">
+                    <span onclick="toggleLike('${id}', this)">🤍 ${likes} J'aime</span>
+                    <span onclick="republierPost('${id}')">🔁 Republier</span>
+                    <span onclick="document.getElementById('comment-area-${id}').style.display='block'">💬 Commenter</span>
+                </div>
+                <div id="comment-area-${id}" class="comment-section" style="display:none;">
+                    <div id="comments-list-${id}"></div>
+                    <div class="comment-input-area">
+                        <input type="text" id="input-${id}" placeholder="Écrire...">
+                        <button onclick="addComment('${id}')">OK</button>
+                    </div>
+                </div>`;
+        }
+
+        window.republierPost = async (id) => {
+            const snap = await get(ref(db, 'posts/' + id));
+            if(snap.exists()){
+                const original = snap.val();
+                if(original.user === window.currentUser) return alert("Tu ne peux pas republier ton propre post !");
+                
+                const repostData = {
+                    text: original.text,
+                    img: original.img || "",
+                    user: window.currentUser,
+                    pp: window.currentProfilePic,
+                    timestamp: Date.now(),
+                    likes: 0,
+                    repostFrom: original.user
+                };
+                push(ref(db, 'posts'), repostData);
+                alert("Post republié sur ton profil !");
+            }
+        }
         
         window.toggleLike = (id, el) => {
             const postRef = ref(db, 'posts/' + id);
@@ -498,10 +679,21 @@
 
         window.addComment = (id, parentId = null) => {
             const inputId = parentId ? `reply-input-${parentId}` : `input-${id}`;
-            const input = document.getElementById(inputId); if (!input.value) return;
+            const input = document.getElementById(inputId); if (!input || !input.value) return;
             const commentData = { user: window.currentUser, text: input.value, timestamp: Date.now() };
             const path = parentId ? `posts/${id}/comments/${parentId}/replies` : `posts/${id}/comments`;
-            push(ref(db, path), commentData); input.value = "";
+            push(ref(db, path), commentData); 
+            input.value = "";
+            if(parentId) document.getElementById(`reply-box-${parentId}`).innerHTML = ""; // Fermer le champ après réponse
+        }
+
+        window.showReply = (cid, pid) => {
+            const box = document.getElementById(`reply-box-${cid}`);
+            box.innerHTML = `
+                <div class="comment-input-area" style="margin-left:20px;">
+                    <input type="text" id="reply-input-${cid}" placeholder="Répondre...">
+                    <button onclick="addComment('${pid}', '${cid}')">OK</button>
+                </div>`;
         }
 
         function chargerCommentaires(postId) {
@@ -533,10 +725,6 @@
             remove(ref(db, path));
         }
 
-        window.showReply = (cid, pid) => {
-            document.getElementById(`reply-box-${cid}`).innerHTML = `<div class="comment-input-area" style="margin-top:5px;"><input type="text" id="reply-input-${cid}" placeholder="Répondre..."><button onclick="addComment('${pid}', '${cid}')">OK</button></div>`;
-        }
-
         window.showPage = (id, force = false) => { 
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); 
             document.getElementById(id).classList.add('active'); 
@@ -545,12 +733,21 @@
         
         window.modifierBio = () => { let n = prompt("Ta nouvelle bio ?"); if (n) set(ref(db, 'users/' + window.currentUser + '/bio'), n); }
         window.modifierStickerBio = () => { let s = prompt("Lien stickers (séparés par ,) :"); if(s !== null) set(ref(db, 'users/' + window.currentUser + '/stickerBio'), s); }
+        
         window.modifierDeco = () => { 
-            let d = prompt("Lien déco (URL) :"); 
-            if(d !== null) {
-                set(ref(db, 'users/' + window.currentUser + '/deco'), d);
-                const decoImg = document.getElementById('pfp-decoration-img');
-                if(d === "") { decoImg.style.display = "none"; } else { decoImg.src = d; decoImg.style.display = "block"; }
+            let d = prompt("Lien de la nouvelle décoration (URL PNG) :"); 
+            if(d) {
+                const layer = document.getElementById('deco-container-layer');
+                creerElementDeco({url: d, x: 0, y: 0, scale: 1.5}, layer, true, activeDecos.length, window.currentUser);
+                sauvegarderDecosFirebase();
+            }
+        }
+
+        window.toutSupprimerDeco = () => {
+            if(confirm("Tout supprimer ?")) {
+                activeDecos = [];
+                sauvegarderDecosFirebase();
+                document.getElementById('deco-container-layer').innerHTML = "";
             }
         }
         
@@ -569,25 +766,24 @@
             const file = document.getElementById('changePfpInput').files[0];
             if(file){
                 const reader = new FileReader();
-                reader.onload = (e) => { 
+                reader.onload = async (e) => { 
                     const newPic = e.target.result;
                     window.currentProfilePic = newPic;
                     document.getElementById('profil-pic-big').src = newPic;
                     document.getElementById('nav-mini-pp').innerHTML = `<img src="${newPic}" style="width:100%; height:100%; object-fit:cover;">`;
                     
-                    // 1. Update profil utilisateur
-                    update(ref(db, 'users/' + window.currentUser), { pp: newPic });
+                    // Mise à jour de l'utilisateur
+                    await update(ref(db, 'users/' + window.currentUser), { pp: newPic });
 
-                    // 2. Update tous les posts de l'utilisateur pour que la PP change partout
-                    get(ref(db, 'posts')).then((snap) => {
-                        if(snap.exists()){
-                            snap.forEach((postChild) => {
-                                if(postChild.val().user === window.currentUser){
-                                    update(ref(db, 'posts/' + postChild.key), { pp: newPic });
-                                }
-                            });
-                        }
-                    });
+                    // Mise à jour de TOUS les posts de l'utilisateur pour changer la photo
+                    const postsSnap = await get(ref(db, 'posts'));
+                    if(postsSnap.exists()){
+                        postsSnap.forEach(child => {
+                            if(child.val().user === window.currentUser){
+                                update(ref(db, 'posts/' + child.key), { pp: newPic });
+                            }
+                        });
+                    }
                 };
                 reader.readAsDataURL(file);
             }
@@ -598,12 +794,35 @@
                 const list = document.getElementById('online-users-list');
                 const groupList = document.getElementById('users-list-group');
                 list.innerHTML = ""; groupList.innerHTML = "";
+                
                 snapshot.forEach(child => {
                     const u = child.val();
                     if(u.name !== window.currentUser) {
-                        let modBtn = window.isCertified ? `<button onclick="deleteAccount('${u.name}')" style="background:#ff4d4d; color:white; border:none; border-radius:10px; padding:5px; cursor:pointer; margin-left:5px;">🚫 Suppr.</button>` : '';
-                        list.innerHTML += `<div style="padding:10px; color:#FF1493; display:flex; justify-content:space-between; align-items:center;"><span>● @${u.name} est en ligne</span><div><button onclick="openChat('${u.name}')" style="background:#FF1493; color:white; border:none; border-radius:10px; padding:5px 10px; cursor:pointer;">✉️ Message</button>${modBtn}</div></div>`;
-                        groupList.innerHTML += `<div class="user-option" onclick="selectUserForGroup(this)" style="padding:10px; cursor:pointer; color:#FF1493; font-weight:bold; border-radius:10px;">@${u.name}</div>`;
+                        const userRow = document.createElement('div');
+                        userRow.style = "padding:10px; color:#FF1493; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #fff0f5;";
+                        
+                        const profileLink = document.createElement('div');
+                        profileLink.style = "display:flex; align-items:center; cursor:pointer;";
+                        profileLink.onclick = () => voirProfil(u.name, u.pp);
+                        
+                        profileLink.innerHTML = `
+                            <img src="${u.pp}" style="width:35px; height:35px; border-radius:50%; border:2px solid #FF1493; margin-right:10px; object-fit:cover;">
+                            <span style="font-weight:bold;">@${u.name}</span>
+                        `;
+
+                        const actions = document.createElement('div');
+                        let modBtn = window.isCertified ? `<button onclick="deleteAccount('${u.name}')" style="background:#ff4d4d; color:white; border:none; border-radius:10px; padding:5px; cursor:pointer; margin-left:5px;">🚫</button>` : '';
+                        
+                        actions.innerHTML = `
+                            <button onclick="openChat('${u.name}')" style="background:#FF1493; color:white; border:none; border-radius:10px; padding:5px 10px; cursor:pointer;">✉️</button>
+                            ${modBtn}
+                        `;
+
+                        userRow.appendChild(profileLink);
+                        userRow.appendChild(actions);
+                        list.appendChild(userRow);
+
+                        groupList.innerHTML += `<div class="user-option" onclick="selectUserForGroup(this, '${u.name}')" style="padding:10px; cursor:pointer; color:#FF1493; font-weight:bold; border-radius:10px;">@${u.name}</div>`;
                     }
                 });
             });
@@ -616,67 +835,218 @@
             }
         }
 
-        window.openChat = function(target) {
+        window.openChat = function(target, isGroup = false) {
+            isGroupChat = isGroup;
             chatTarget = target;
-            document.getElementById('chat-with-name').innerText = "@" + target;
+            currentGroupId = isGroup ? target : "";
+
             document.getElementById('chat-window').style.display = "flex";
-            const chatId = [window.currentUser, chatTarget].sort().join("_");
-            onValue(ref(db, 'direct_messages/' + chatId), (snapshot) => {
-                const box = document.getElementById('chat-messages'); box.innerHTML = "";
-                snapshot.forEach(child => {
-                    const m = child.val();
-                    const mid = child.key;
-                    const div = document.createElement('div');
-                    div.className = `msg-bubble ${m.sender === window.currentUser ? 'msg-me' : 'msg-them'}`;
-                    let content = m.text ? `<div>${m.text}</div>` : "";
-                    if(m.photo) content += `<img src="${m.photo}" class="chat-img">`;
-                    if(m.sticker) content += `<img src="${m.sticker}" class="sticker">`;
-                    if(m.sender === window.currentUser || window.isCertified) {
-                        content += `<button class="del-msg-btn" onclick="deleteMsg('${chatId}', '${mid}')">✖</button>`;
-                    }
-                    div.innerHTML = content; box.appendChild(div);
+            const chatBox = document.getElementById('chat-messages'); chatBox.innerHTML = "";
+            
+            const chatId = isGroup ? target : [window.currentUser, target].sort().join("_");
+            const dbPath = isGroup ? 'group_messages/' + target : 'direct_messages/' + chatId;
+            const settingsPath = isGroup ? 'group_settings/' + target : 'dm_settings/' + chatId;
+
+            // Écouter le fond d'écran synchronisé
+            onValue(ref(db, settingsPath + '/wallpaper'), (snap) => {
+                const url = snap.val();
+                if(url) {
+                    chatBox.style.backgroundImage = `url(${url})`;
+                    chatBox.style.backgroundSize = "cover";
+                    chatBox.style.backgroundPosition = "center";
+                } else {
+                    chatBox.style.backgroundImage = "none";
+                }
+            });
+
+            if(isGroup) {
+                get(ref(db, 'groups/' + target)).then(snap => {
+                    const data = snap.val();
+                    if(!data) { closeChat(); return; }
+                    document.getElementById('chat-with-name').innerText = data.name;
+                    document.getElementById('chat-header-pp').src = data.pp || "https://via.placeholder.com/100";
                 });
-                box.scrollTop = box.scrollHeight;
-            });
-            onValue(ref(db, 'chat_settings/' + chatId + '/background'), (snap) => {
-                const bg = snap.val(); const box = document.getElementById('chat-messages');
-                box.style.backgroundImage = bg ? `url(${bg})` : "none";
-            });
+                onValue(ref(db, dbPath), (snapshot) => {
+                    chatBox.innerHTML = "";
+                    snapshot.forEach(child => renderMessage(child.val(), child.key, dbPath));
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                });
+            } else {
+                document.getElementById('chat-with-name').innerText = "@" + target;
+                onValue(ref(db, 'users/' + target), (snap) => {
+                    const data = snap.val();
+                    if(data) document.getElementById('chat-header-pp').src = data.pp;
+                });
+                onValue(ref(db, dbPath), (snapshot) => {
+                    chatBox.innerHTML = "";
+                    snapshot.forEach(child => renderMessage(child.val(), child.key, dbPath));
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                });
+            }
         }
 
-        window.deleteMsg = (chatId, mid) => { if(confirm("Supprimer ?")) remove(ref(db, 'direct_messages/' + chatId + '/' + mid)); }
         window.changeChatBackground = () => {
             const file = document.getElementById('chatBgInput').files[0];
-            const chatId = [window.currentUser, chatTarget].sort().join("_");
             if(file){
-                const reader = new FileReader(); reader.onload = (e) => set(ref(db, 'chat_settings/' + chatId + '/background'), e.target.result);
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const url = e.target.result;
+                    const chatId = isGroupChat ? currentGroupId : [window.currentUser, chatTarget].sort().join("_");
+                    const settingsPath = isGroupChat ? 'group_settings/' + chatId : 'dm_settings/' + chatId;
+                    set(ref(db, settingsPath + '/wallpaper'), url);
+                };
                 reader.readAsDataURL(file);
             }
         }
-        window.ajouterStickerChat = () => { let s = prompt("Lien du sticker :"); if(s) window.currentChatSticker = s; }
-        window.closeChat = () => document.getElementById('chat-window').style.display = "none";
+
+        function renderMessage(m, mid, path) {
+            const div = document.createElement('div');
+            div.className = `msg-bubble ${m.sender === window.currentUser ? 'msg-me' : 'msg-them'}`;
+            let content = ``;
+            if(isGroupChat && m.sender !== window.currentUser) content += `<small style="font-size:9px; opacity:0.7;">${m.sender}</small>`;
+            if(m.text) content += `<div>${m.text}</div>`;
+            if(m.photo) content += `<img src="${m.photo}" class="chat-img">`;
+            if(m.sticker) content += `<img src="${m.sticker}" class="sticker">`;
+            if(m.sender === window.currentUser || window.isCertified) {
+                content += `<button class="del-msg-btn" onclick="deleteMsg('${path}', '${mid}')">✖</button>`;
+            }
+            div.innerHTML = content;
+            document.getElementById('chat-messages').appendChild(div);
+        }
+
+        window.deleteMsg = (path, mid) => { if(confirm("Supprimer ?")) remove(ref(db, path + '/' + mid)); }
+        
         window.sendPrivateMsg = function() {
             const input = document.getElementById('chat-input');
             if (!input.value && !window.currentChatSticker) return;
-            const chatId = [window.currentUser, chatTarget].sort().join("_");
-            push(ref(db, 'direct_messages/' + chatId), { sender: window.currentUser, text: input.value, sticker: window.currentChatSticker || "", timestamp: Date.now() });
+            const msgData = { sender: window.currentUser, text: input.value, sticker: window.currentChatSticker || "", timestamp: Date.now() };
+            
+            if(isGroupChat) {
+                push(ref(db, 'group_messages/' + currentGroupId), msgData);
+            } else {
+                const chatId = [window.currentUser, chatTarget].sort().join("_");
+                push(ref(db, 'direct_messages/' + chatId), msgData);
+            }
             input.value = ""; window.currentChatSticker = "";
         }
+
+        window.closeChat = () => document.getElementById('chat-window').style.display = "none";
+
+        window.toggleGroupPopup = () => { 
+            let p = document.getElementById('group-popup'); 
+            p.style.display = (p.style.display === 'none') ? 'block' : 'none'; 
+            selectedUsers = [];
+            document.querySelectorAll('.user-option').forEach(el => el.style.background = 'none');
+        }
+
+        window.selectUserForGroup = (el, name) => {
+            if (selectedUsers.includes(name)) {
+                selectedUsers = selectedUsers.filter(x => x !== name);
+                el.style.background = 'none';
+            } else {
+                selectedUsers.push(name);
+                el.style.background = '#ffdae9';
+            }
+        }
+
+        window.validerGroupe = () => {
+            const name = document.getElementById('new-group-name').value;
+            if(!name || selectedUsers.length === 0) return alert("Nom et membres requis !");
+            const members = [...selectedUsers, window.currentUser];
+            const groupRef = push(ref(db, 'groups'));
+            set(groupRef, {
+                id: groupRef.key,
+                name: name,
+                pp: "https://via.placeholder.com/100",
+                members: members,
+                owner: window.currentUser
+            });
+            document.getElementById('new-group-name').value = "";
+            toggleGroupPopup();
+        }
+
+        function écouterGroupes() {
+            onValue(ref(db, 'groups'), (snap) => {
+                const list = document.getElementById('groups-list');
+                list.innerHTML = "";
+                let hasGroups = false;
+                snap.forEach(child => {
+                    const g = child.val();
+                    if(g.members && g.members.includes(window.currentUser)) {
+                        hasGroups = true;
+                        const row = document.createElement('div');
+                        row.style = "padding:10px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #fff0f5;";
+                        row.innerHTML = `
+                            <div style="display:flex; align-items:center; cursor:pointer;" onclick="ouvrirProfilGroupe('${g.id}')">
+                                <img src="${g.pp}" style="width:35px; height:35px; border-radius:50%; border:2px solid #FF1493; margin-right:10px; object-fit:cover;">
+                                <span style="font-weight:bold; color:#FF1493;">${g.name}</span>
+                            </div>
+                            <button onclick="openChat('${g.id}', true)" style="background:#FF1493; color:white; border:none; border-radius:10px; padding:5px 10px; cursor:pointer;">✉️</button>
+                        `;
+                        list.appendChild(row);
+                    }
+                });
+                if(hasGroups) document.getElementById('no-msg-text').style.display = "none";
+            });
+        }
+
+        window.ouvrirProfilGroupe = (id) => {
+            currentGroupId = id;
+            get(ref(db, 'groups/' + id)).then(snap => {
+                const g = snap.val();
+                document.getElementById('edit-group-name').value = g.name;
+                document.getElementById('group-pp-preview').src = g.pp;
+                document.getElementById('group-profile-popup').style.display = 'block';
+            });
+        }
+
+        window.previewGroupPic = () => {
+            const file = document.getElementById('group-pp-input').files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => document.getElementById('group-pp-preview').src = e.target.result;
+                reader.readAsDataURL(file);
+            }
+        }
+
+        window.sauvegarderProfilGroupe = () => {
+            const newName = document.getElementById('edit-group-name').value;
+            const newPp = document.getElementById('group-pp-preview').src;
+            update(ref(db, 'groups/' + currentGroupId), {
+                name: newName,
+                pp: newPp
+            });
+            document.getElementById('group-profile-popup').style.display = 'none';
+        }
+
+        window.supprimerGroupe = () => {
+            if(confirm("Voulez-vous vraiment supprimer ce groupe définitivement ?")) {
+                remove(ref(db, 'groups/' + currentGroupId));
+                remove(ref(db, 'group_messages/' + currentGroupId));
+                remove(ref(db, 'group_settings/' + currentGroupId));
+                document.getElementById('group-profile-popup').style.display = 'none';
+                alert("Groupe supprimé !");
+            }
+        }
+
+        window.toggleSearchFriend = () => { let b = document.getElementById('search-friend-bar'); b.style.display = (b.style.display === 'none') ? 'block' : 'none'; }
+        window.ajouterStickerChat = () => { let s = prompt("Lien du sticker :"); if(s) window.currentChatSticker = s; }
         window.sendPrivatePhoto = () => {
             const file = document.getElementById('chatPhotoInput').files[0];
             if(!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
-                const chatId = [window.currentUser, chatTarget].sort().join("_");
-                push(ref(db, 'direct_messages/' + chatId), { sender: window.currentUser, photo: e.target.result, timestamp: Date.now() });
+                const msgData = { sender: window.currentUser, photo: e.target.result, timestamp: Date.now() };
+                if(isGroupChat) push(ref(db, 'group_messages/' + currentGroupId), msgData);
+                else {
+                    const chatId = [window.currentUser, chatTarget].sort().join("_");
+                    push(ref(db, 'direct_messages/' + chatId), msgData);
+                }
                 document.getElementById('chatPhotoInput').value = "";
             };
             reader.readAsDataURL(file);
         }
-        window.toggleSearchFriend = () => { let b = document.getElementById('search-friend-bar'); b.style.display = (b.style.display === 'none') ? 'block' : 'none'; }
-        window.toggleGroupPopup = () => { let p = document.getElementById('group-popup'); p.style.display = (p.style.display === 'none') ? 'block' : 'none'; }
-        window.selectUserForGroup = (el) => { let u = el.innerText; if (selectedUsers.includes(u)) { selectedUsers = selectedUsers.filter(x => x !== u); el.style.background = 'none'; } else { selectedUsers.push(u); el.style.background = '#ffdae9'; } }
-        window.validerGroupe = () => { if (selectedUsers.length === 0) return; alert("Groupe créé !"); window.toggleGroupPopup(); document.getElementById('no-msg-text').innerText = "Groupe avec : " + selectedUsers.join(", "); }
+
     </script>
 </body>
 </html>
