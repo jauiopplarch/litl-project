@@ -103,7 +103,6 @@
         .nav-item { cursor: pointer; background: none; border: none; display: flex; flex-direction: column; align-items: center; position: relative; }
         .nav-item span { font-size: 10px; color: #FF1493; font-weight: bold; margin-top: 2px; }
 
-        /* Badge de notification */
         .notif-badge {
             position: absolute;
             top: -5px;
@@ -119,7 +118,6 @@
             z-index: 1001;
         }
 
-        /* Badge pour la liste des contacts */
         .contact-badge {
             background-color: #ff4d4d;
             color: white;
@@ -218,20 +216,16 @@
             object-fit: cover;
         }
 
-        /* Certification Badge */
         .cert-badge { color: #1DA1F2; cursor: pointer; font-size: 14px; margin-left: 5px; vertical-align: middle; }
-
-        /* Style spécifique Republication */
         .repost-badge { font-size: 10px; color: #888; margin-bottom: 5px; font-weight: bold; display: block; }
 
-        /* Style Follow Button */
         .follow-btn {
             background: #FF1493; color: white; border: none; padding: 4px 10px; border-radius: 12px;
             font-size: 10px; cursor: pointer; font-weight: bold; margin-left: 8px;
         }
         .follow-btn.followed { background: #ccc; cursor: default; }
 
-        /* --- AJOUT : STYLE PLEIN ÉCRAN VIDÉO --- */
+        /* --- STYLE PLEIN ÉCRAN VIDÉO (OPTIMISÉ PC) --- */
         #video-fullscreen-overlay {
             display: none; position: fixed; top:0; left:0; width:100vw; height:100vh;
             background: black; z-index: 9999; flex-direction: column; overflow-y: scroll;
@@ -241,26 +235,34 @@
             width: 100vw; height: 100vh; position: relative;
             scroll-snap-align: start; flex-shrink: 0;
             display: flex; align-items: center; justify-content: center;
+            background: #000;
         }
         .fullscreen-video-container video {
-            width: 100%; height: 100%; object-fit: contain;
+            max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain;
         }
         .video-ui-overlay {
-            position: absolute; bottom: 80px; left: 20px; right: 20px;
+            position: absolute; bottom: 40px; left: 20px; right: 20px;
             color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-            pointer-events: none;
+            pointer-events: none; max-width: 500px;
         }
         .video-ui-overlay * { pointer-events: auto; }
         .close-video-btn {
             position: fixed; top: 20px; right: 20px; color: white; font-size: 30px;
             cursor: pointer; z-index: 10000; text-shadow: 0 0 5px black;
         }
-        .video-side-actions {
-            position: absolute; right: 15px; bottom: 150px;
-            display: flex; flex-direction: column; gap: 20px; align-items: center;
+
+        /* Music Badge styles */
+        .music-indicator {
+            font-size: 10px;
+            color: #FF1493;
+            background: #ffdae9;
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 5px;
         }
-        .side-btn { font-size: 25px; color: white; cursor: pointer; text-align: center; }
-        .side-btn span { display: block; font-size: 12px; margin-top: 5px; }
 
     </style>
 </head>
@@ -287,7 +289,11 @@
     <div id="page-accueil" class="page">
         <div class="card">
             <textarea id="postText" placeholder="Partage ta journée..."></textarea>
-            <input type="file" id="postMedia" accept="image/*,video/*">
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                <input type="file" id="postMedia" accept="image/*,video/*" style="flex: 1;">
+                <button onclick="document.getElementById('postAudio').click()" style="background:#ffdae9; border:2px solid #FF1493; border-radius:50%; width:40px; height:40px; cursor:pointer; color:#FF1493; font-weight:bold;">♫</button>
+                <input type="file" id="postAudio" accept="audio/mp3,audio/*" hidden onchange="alert('Musique ajoutée !')">
+            </div>
             <button onclick="creerPost()" style="background:#FF1493; color:white; border:none; padding:12px; width:100%; border-radius:15px; cursor:pointer; font-weight:bold; margin-top:10px;">PUBLIER</button>
         </div>
         <div id="feed"></div>
@@ -360,9 +366,7 @@
         <div class="card">
             <div class="banner-container" id="banner-box">
                 <img id="profil-banner-img" src="https://i.pinimg.com/736x/8d/e2/2e/8de22e28372652155d3b64c185e33433.jpg">
-                
                 <div id="deco-container-layer" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
-
                 <div class="pfp-container">
                     <img id="profil-pic-big" src="" onclick="document.getElementById('changePfpInput').click()">
                     <input type="file" id="changePfpInput" hidden accept="image/*" onchange="changePfpAfterLogin()">
@@ -417,9 +421,22 @@
         let activeDecos = []; 
         let isGroupChat = false;
         let currentGroupId = "";
-
-        // Variable pour stocker tous les posts vidéo chargés
         let allVideoPosts = [];
+
+        // IntersectionObserver pour gérer l'audio automatique "style insta"
+        const postObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const audio = entry.target.querySelector('audio');
+                if (audio) {
+                    if (entry.isIntersecting) {
+                        audio.play().catch(e => console.log("Auto-play bloqué par le navigateur"));
+                    } else {
+                        audio.pause();
+                        audio.currentTime = 0; // Remet au début quand on s'éloigne
+                    }
+                }
+            });
+        }, { threshold: 0.7 });
 
         window.onload = () => {
             const savedUser = localStorage.getItem('nookgram_user');
@@ -494,7 +511,6 @@
                     });
                 }
             });
-            
             gererNotifications();
         }
 
@@ -652,34 +668,56 @@
             }
         }
 
-        window.creerPost = function() {
+        window.creerPost = async function() {
             const text = document.getElementById('postText').value;
             const mediaInput = document.getElementById('postMedia');
+            const audioInput = document.getElementById('postAudio');
+            
             if (!text && !mediaInput.files[0]) return;
-            const postData = { text: text, user: window.currentUser, pp: window.currentProfilePic, timestamp: Date.now(), img: "", video: "", likes: 0, repostFrom: "" };
-            if (mediaInput.files[0]) {
-                const file = mediaInput.files[0];
-                const isVideo = file.type.startsWith('video/');
+            
+            const postData = { 
+                text: text, 
+                user: window.currentUser, 
+                pp: window.currentProfilePic, 
+                timestamp: Date.now(), 
+                img: "", 
+                video: "", 
+                audio: "",
+                likes: 0, 
+                repostFrom: "" 
+            };
+
+            const readFile = (file) => new Promise(resolve => {
                 const reader = new FileReader();
-                reader.onload = (e) => { 
-                    if(isVideo) postData.video = e.target.result;
-                    else postData.img = e.target.result;
-                    push(ref(db, 'posts'), postData); 
-                };
+                reader.onload = (e) => resolve(e.target.result);
                 reader.readAsDataURL(file);
-            } else push(ref(db, 'posts'), postData);
-            document.getElementById('postText').value = ""; mediaInput.value = "";
+            });
+
+            if (mediaInput.files[0]) {
+                const isVideo = mediaInput.files[0].type.startsWith('video/');
+                const res = await readFile(mediaInput.files[0]);
+                if(isVideo) postData.video = res; else postData.img = res;
+            }
+
+            if (audioInput.files[0]) {
+                postData.audio = await readFile(audioInput.files[0]);
+            }
+
+            push(ref(db, 'posts'), postData);
+            document.getElementById('postText').value = ""; 
+            mediaInput.value = ""; 
+            audioInput.value = "";
         }
 
         function chargerPosts() {
             onValue(ref(db, 'posts'), (snapshot) => {
                 const feed = document.getElementById('feed'); feed.innerHTML = "";
                 const posts = []; 
-                allVideoPosts = []; // Reset list video
+                allVideoPosts = []; 
                 snapshot.forEach(child => { 
                     const p = {id: child.key, ...child.val()};
                     posts.unshift(p);
-                    if(p.video) allVideoPosts.unshift(p); // Collecte uniquement les vidéos
+                    if(p.video) allVideoPosts.unshift(p);
                 });
                 posts.forEach(p => renderPostUI(p, 'feed'));
             });
@@ -698,6 +736,7 @@
             const target = document.getElementById(targetId);
             const post = document.createElement('div');
             post.className = 'post';
+            post.id = "post-" + p.id;
             let repostBadge = p.repostFrom ? `<span class="repost-badge">🔁 Republié par @${p.user}</span>` : "";
             let delBtn = (p.user === window.currentUser || window.isCertified) ? `<span onclick="deletePost('${p.id}')" style="cursor:pointer; color:#ff4d4d;">🗑️</span>` : ``;
             let followHtml = "";
@@ -720,14 +759,24 @@
                     </div>
                     ${delBtn}
                 </div><div>${p.text}</div>`;
+            
+            if (p.audio) {
+                html += `
+                <div class="music-indicator">♫ Musique ajoutée</div>
+                <audio src="${p.audio}" loop hidden></audio>`;
+            }
+
             if (p.img) html += `<img src="${p.img}" class="post-img">`;
             if (p.video) html += `<video src="${p.video}" class="post-video" onclick="openVideoFullscreen('${p.id}')"></video>`;
             post.innerHTML = html + actionsHTML(p, p.likes || 0);
             target.appendChild(post);
+            
+            // Observer le post pour l'audio
+            postObserver.observe(post);
+            
             chargerCommentaires(p.id);
         }
 
-        // --- AJOUT : LOGIQUE PLEIN ÉCRAN VIDÉO ---
         window.openVideoFullscreen = function(postId) {
             const overlay = document.getElementById('video-fullscreen-overlay');
             overlay.innerHTML = '<span class="close-video-btn" onclick="closeVideoFullscreen()">✖</span>';
@@ -739,13 +788,8 @@
                 container.id = "full-vid-" + p.id;
                 container.innerHTML = `
                     <video src="${p.video}" loop playsinline onclick="this.paused ? this.play() : this.pause()"></video>
-                    <div class="video-side-actions">
-                        <div class="side-btn" onclick="toggleLike('${p.id}', this)">❤️ <span>${p.likes || 0}</span></div>
-                        <div class="side-btn" onclick="document.getElementById('comment-area-${p.id}').style.display='block'">💬 <span>Com.</span></div>
-                        <div class="side-btn" onclick="republierPost('${p.id}')">🔁</div>
-                    </div>
                     <div class="video-ui-overlay">
-                        <b onclick="voirProfil('${p.user}', '${p.pp}')">@${p.user}</b>
+                        <b onclick="closeVideoFullscreen(); voirProfil('${p.user}', '${p.pp}')" style="cursor:pointer; color:#FF1493;">@${p.user}</b>
                         <p>${p.text}</p>
                     </div>
                 `;
@@ -755,13 +799,12 @@
             const targetElement = document.getElementById("full-vid-" + postId);
             if(targetElement) targetElement.scrollIntoView();
 
-            // Auto-play la vidéo visible
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     const vid = entry.target.querySelector('video');
                     if (entry.isIntersecting) {
                         vid.play();
-                        vid.muted = false; // On active le son
+                        vid.muted = false;
                     } else {
                         vid.pause();
                     }
@@ -894,7 +937,7 @@
             if(snap.exists()){
                 const original = snap.val();
                 if(original.user === window.currentUser) return alert("Tu ne peux pas republier ton propre post !");
-                const repostData = { text: original.text, img: original.img || "", video: original.video || "", user: window.currentUser, pp: window.currentProfilePic, timestamp: Date.now(), likes: 0, repostFrom: original.user };
+                const repostData = { text: original.text, img: original.img || "", video: original.video || "", audio: original.audio || "", user: window.currentUser, pp: window.currentProfilePic, timestamp: Date.now(), likes: 0, repostFrom: original.user };
                 push(ref(db, 'posts'), repostData); alert("Post republié !");
             }
         }
