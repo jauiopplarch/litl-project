@@ -143,7 +143,7 @@
 
         .post-header { display: flex; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #ffdae9; padding-bottom: 5px; justify-content: space-between;}
         .profile-pic-small { width: 40px; height: 40px; object-fit: cover; border: 2px solid #FF1493; margin-right: 10px; background: white; cursor: pointer;}
-        .post-img { width: 100%; border-radius: 15px; margin-top: 10px; }
+        .post-img, .post-video { width: 100%; border-radius: 15px; margin-top: 10px; cursor: pointer; }
         .post-actions { margin-top: 10px; display: flex; gap: 15px; font-weight: bold; color: #FF1493; cursor: pointer; font-size: 13px; }
         
         .comment-section { border-top: 1px solid #ffdae9; margin-top: 10px; padding-top: 10px; }
@@ -200,7 +200,7 @@
         .msg-bubble { padding: 8px 12px; border-radius: 15px; max-width: 80%; font-size: 13px; z-index: 2; display: flex; flex-direction: column; position: relative; }
         .msg-me { background: #FF1493; color: white; align-self: flex-end; align-items: flex-end;}
         .msg-them { background: #ffdae9; color: #FF1493; align-self: flex-start; }
-        .chat-img { max-width: 100%; border-radius: 10px; margin-top: 5px; border: 1px solid white; }
+        .chat-img, .chat-video { max-width: 100%; border-radius: 10px; margin-top: 5px; border: 1px solid white; }
         .del-msg-btn { position: absolute; top: -5px; right: -5px; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 15px; height: 15px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         
         .chat-pp-mini-container {
@@ -223,9 +223,52 @@
 
         /* Style spécifique Republication */
         .repost-badge { font-size: 10px; color: #888; margin-bottom: 5px; font-weight: bold; display: block; }
+
+        /* Style Follow Button */
+        .follow-btn {
+            background: #FF1493; color: white; border: none; padding: 4px 10px; border-radius: 12px;
+            font-size: 10px; cursor: pointer; font-weight: bold; margin-left: 8px;
+        }
+        .follow-btn.followed { background: #ccc; cursor: default; }
+
+        /* --- AJOUT : STYLE PLEIN ÉCRAN VIDÉO --- */
+        #video-fullscreen-overlay {
+            display: none; position: fixed; top:0; left:0; width:100vw; height:100vh;
+            background: black; z-index: 9999; flex-direction: column; overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+        }
+        .fullscreen-video-container {
+            width: 100vw; height: 100vh; position: relative;
+            scroll-snap-align: start; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .fullscreen-video-container video {
+            width: 100%; height: 100%; object-fit: contain;
+        }
+        .video-ui-overlay {
+            position: absolute; bottom: 80px; left: 20px; right: 20px;
+            color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+        }
+        .video-ui-overlay * { pointer-events: auto; }
+        .close-video-btn {
+            position: fixed; top: 20px; right: 20px; color: white; font-size: 30px;
+            cursor: pointer; z-index: 10000; text-shadow: 0 0 5px black;
+        }
+        .video-side-actions {
+            position: absolute; right: 15px; bottom: 150px;
+            display: flex; flex-direction: column; gap: 20px; align-items: center;
+        }
+        .side-btn { font-size: 25px; color: white; cursor: pointer; text-align: center; }
+        .side-btn span { display: block; font-size: 12px; margin-top: 5px; }
+
     </style>
 </head>
 <body>
+
+    <div id="video-fullscreen-overlay">
+        <span class="close-video-btn" onclick="closeVideoFullscreen()">✖</span>
+    </div>
 
     <div id="page-connexion" class="page active">
         <div class="card">
@@ -244,7 +287,7 @@
     <div id="page-accueil" class="page">
         <div class="card">
             <textarea id="postText" placeholder="Partage ta journée..."></textarea>
-            <input type="file" id="postImage" accept="image/*">
+            <input type="file" id="postMedia" accept="image/*,video/*">
             <button onclick="creerPost()" style="background:#FF1493; color:white; border:none; padding:12px; width:100%; border-radius:15px; cursor:pointer; font-weight:bold; margin-top:10px;">PUBLIER</button>
         </div>
         <div id="feed"></div>
@@ -288,8 +331,8 @@
         <div id="chat-messages"></div>
         <div class="comment-input-area" style="padding: 10px; background: white;">
             <input type="text" id="chat-input" placeholder="Ton message...">
-            <button onclick="document.getElementById('chatPhotoInput').click()" style="background:none; border:none; font-size:20px; cursor:pointer;">📷</button>
-            <input type="file" id="chatPhotoInput" hidden accept="image/*" onchange="sendPrivatePhoto()">
+            <button onclick="document.getElementById('chatMediaInput').click()" style="background:none; border:none; font-size:20px; cursor:pointer;">📷</button>
+            <input type="file" id="chatMediaInput" hidden accept="image/*,video/*" onchange="sendPrivateMedia()">
             <button onclick="ajouterStickerChat()" style="background:none; border:none; font-size:20px; cursor:pointer;">🏷️</button>
             <button onclick="sendPrivateMsg()">OK</button>
         </div>
@@ -336,7 +379,7 @@
             </div>
             <div style="display:flex; justify-content:space-around; margin:20px 0; border-top: 1px solid rgba(0,0,0,0.05); padding-top:15px;">
                 <div><b id="count-post" style="color:#FF1493; font-size:20px;">0</b><br><small>POSTS</small></div>
-                <div><b style="color:#FF1493; font-size:20px;">0</b><br><small>FOLLOWERS</small></div>
+                <div><b id="count-followers" style="color:#FF1493; font-size:20px;">0</b><br><small>FOLLOWERS</small></div>
                 <div><b id="total-likes" style="color:#FF1493; font-size:20px;">0</b><br><small>LIKES</small></div>
             </div>
             <button id="logout-btn" onclick="logout()" style="background:#f5f5f5; border:none; padding:10px; font-size:11px; width:60%; border-radius:10px; cursor:pointer; color:#888;">DECONNEXION</button>
@@ -374,6 +417,9 @@
         let activeDecos = []; 
         let isGroupChat = false;
         let currentGroupId = "";
+
+        // Variable pour stocker tous les posts vidéo chargés
+        let allVideoPosts = [];
 
         window.onload = () => {
             const savedUser = localStorage.getItem('nookgram_user');
@@ -452,20 +498,14 @@
             gererNotifications();
         }
 
-        // --- LOGIQUE DES NOTIFICATIONS ET BADGES ---
         function gererNotifications() {
             const mainBadge = document.getElementById('inbox-notif');
-            
             onValue(ref(db), (snapshot) => {
                 let totalNonLus = 0;
                 const dms = snapshot.child('direct_messages').val();
                 const groups = snapshot.child('groups').val();
                 const groupMsgs = snapshot.child('group_messages').val();
-
-                // On stocke les comptes par discussion
                 let countsByChat = {};
-
-                // DM
                 if(dms) {
                     Object.keys(dms).forEach(chatId => {
                         if(chatId.includes(window.currentUser)) {
@@ -479,8 +519,6 @@
                         }
                     });
                 }
-
-                // Groupes
                 if(groups && groupMsgs) {
                     Object.keys(groups).forEach(gid => {
                         if(groups[gid].members && groups[gid].members.includes(window.currentUser)) {
@@ -496,22 +534,17 @@
                         }
                     });
                 }
-
-                // Update badge principal
                 if (totalNonLus > 0 && !document.getElementById('page-messages').classList.contains('active')) {
                     mainBadge.innerText = totalNonLus > 99 ? "99+" : totalNonLus;
                     mainBadge.style.display = "block";
                 } else {
                     mainBadge.style.display = "none";
                 }
-
-                // Update badges individuels dans la liste
                 updateIndividualBadges(countsByChat);
             });
         }
 
         function updateIndividualBadges(counts) {
-            // Pour chaque utilisateur dans la liste online
             document.querySelectorAll('.user-row-msg').forEach(row => {
                 const targetName = row.getAttribute('data-user');
                 const chatId = [window.currentUser, targetName].sort().join("_");
@@ -520,8 +553,6 @@
                 if(count > 0) { b.innerText = count; b.style.display = "flex"; }
                 else { b.style.display = "none"; }
             });
-
-            // Pour chaque groupe
             document.querySelectorAll('.group-row-msg').forEach(row => {
                 const gid = row.getAttribute('data-id');
                 const count = counts[gid] || 0;
@@ -535,17 +566,12 @@
             isGroupChat = isGroup;
             chatTarget = target;
             currentGroupId = isGroup ? target : "";
-
-            // Reset le compteur localement quand on ouvre
             const chatId = isGroup ? target : [window.currentUser, target].sort().join("_");
             localStorage.setItem(`last_read_${chatId}_${window.currentUser}`, Date.now());
-
             document.getElementById('chat-window').style.display = "flex";
             const chatBox = document.getElementById('chat-messages'); chatBox.innerHTML = "";
-            
             const dbPath = isGroup ? 'group_messages/' + target : 'direct_messages/' + chatId;
             const settingsPath = isGroup ? 'group_settings/' + target : 'dm_settings/' + chatId;
-
             onValue(ref(db, settingsPath + '/wallpaper'), (snap) => {
                 const url = snap.val();
                 if(url) {
@@ -554,7 +580,6 @@
                     chatBox.style.backgroundPosition = "center";
                 } else { chatBox.style.backgroundImage = "none"; }
             });
-
             if(isGroup) {
                 get(ref(db, 'groups/' + target)).then(snap => {
                     const data = snap.val();
@@ -569,14 +594,26 @@
                     if(data) document.getElementById('chat-header-pp').src = data.pp;
                 });
             }
-
             onValue(ref(db, dbPath), (snapshot) => {
                 chatBox.innerHTML = "";
                 snapshot.forEach(child => renderMessage(child.val(), child.key, dbPath));
                 chatBox.scrollTop = chatBox.scrollHeight;
-                // Marquer comme lu en temps réel
                 localStorage.setItem(`last_read_${chatId}_${window.currentUser}`, Date.now());
             });
+        }
+
+        window.changeChatBackground = () => {
+            const file = document.getElementById('chatBgInput').files[0];
+            if(file){
+                const reader = new FileReader();
+                reader.onload = (e) => { 
+                    const result = e.target.result;
+                    const chatId = isGroupChat ? currentGroupId : [window.currentUser, chatTarget].sort().join("_");
+                    const settingsPath = isGroupChat ? 'group_settings/' + currentGroupId : 'dm_settings/' + chatId;
+                    update(ref(db, settingsPath), { wallpaper: result });
+                };
+                reader.readAsDataURL(file);
+            }
         }
 
         window.demanderCertification = function() {
@@ -586,9 +623,7 @@
                 window.isCertified = true;
                 alert("Compte certifié ! Redémarrage...");
                 location.reload();
-            } else if(pass !== null) {
-                alert("Mot de passe incorrect.");
-            }
+            } else if(pass !== null) { alert("Mot de passe incorrect."); }
         }
 
         function appliquerDroitsCertifies() {
@@ -597,9 +632,7 @@
                 certIcon.style.color = "#FFD700"; 
                 certIcon.title = "Compte Officiel";
                 document.getElementById('admin-bg-btn').style.display = "flex";
-            } else {
-                certIcon.style.color = "#1DA1F2";
-            }
+            } else { certIcon.style.color = "#1DA1F2"; }
         }
 
         window.changeMainBackground = () => {
@@ -621,47 +654,129 @@
 
         window.creerPost = function() {
             const text = document.getElementById('postText').value;
-            const imgInput = document.getElementById('postImage');
-            if (!text && !imgInput.files[0]) return;
-            const postData = { text: text, user: window.currentUser, pp: window.currentProfilePic, timestamp: Date.now(), img: "", likes: 0, repostFrom: "" };
-            if (imgInput.files[0]) {
+            const mediaInput = document.getElementById('postMedia');
+            if (!text && !mediaInput.files[0]) return;
+            const postData = { text: text, user: window.currentUser, pp: window.currentProfilePic, timestamp: Date.now(), img: "", video: "", likes: 0, repostFrom: "" };
+            if (mediaInput.files[0]) {
+                const file = mediaInput.files[0];
+                const isVideo = file.type.startsWith('video/');
                 const reader = new FileReader();
-                reader.onload = (e) => { postData.img = e.target.result; push(ref(db, 'posts'), postData); };
-                reader.readAsDataURL(imgInput.files[0]);
+                reader.onload = (e) => { 
+                    if(isVideo) postData.video = e.target.result;
+                    else postData.img = e.target.result;
+                    push(ref(db, 'posts'), postData); 
+                };
+                reader.readAsDataURL(file);
             } else push(ref(db, 'posts'), postData);
-            document.getElementById('postText').value = ""; imgInput.value = "";
+            document.getElementById('postText').value = ""; mediaInput.value = "";
         }
 
         function chargerPosts() {
             onValue(ref(db, 'posts'), (snapshot) => {
                 const feed = document.getElementById('feed'); feed.innerHTML = "";
-                const posts = []; snapshot.forEach(child => { posts.unshift({id: child.key, ...child.val()}); });
+                const posts = []; 
+                allVideoPosts = []; // Reset list video
+                snapshot.forEach(child => { 
+                    const p = {id: child.key, ...child.val()};
+                    posts.unshift(p);
+                    if(p.video) allVideoPosts.unshift(p); // Collecte uniquement les vidéos
+                });
                 posts.forEach(p => renderPostUI(p, 'feed'));
             });
+        }
+
+        async function followUser(targetUser) {
+            const followRef = ref(db, `follows/${targetUser}/${window.currentUser}`);
+            const snapshot = await get(followRef);
+            if (!snapshot.exists()) {
+                await set(followRef, true);
+                alert("Tu suis maintenant @" + targetUser);
+            }
         }
 
         function renderPostUI(p, targetId) {
             const target = document.getElementById(targetId);
             const post = document.createElement('div');
             post.className = 'post';
-            
             let repostBadge = p.repostFrom ? `<span class="repost-badge">🔁 Republié par @${p.user}</span>` : "";
             let delBtn = (p.user === window.currentUser || window.isCertified) ? `<span onclick="deletePost('${p.id}')" style="cursor:pointer; color:#ff4d4d;">🗑️</span>` : ``;
-            
+            let followHtml = "";
+            if (p.user !== window.currentUser) {
+                followHtml = `<button id="btn-follow-${p.id}" class="follow-btn" onclick="followUser('${p.user}')">Suivre</button>`;
+                get(ref(db, `follows/${p.user}/${window.currentUser}`)).then(snap => {
+                    if(snap.exists()) {
+                        const btn = document.getElementById(`btn-follow-${p.id}`);
+                        if(btn) { btn.innerText = "Suivi"; btn.classList.add('followed'); btn.onclick = null; }
+                    }
+                });
+            }
             let html = `
                 ${repostBadge}
                 <div class="post-header">
                     <div style="display:flex; align-items:center; cursor:pointer;" onclick="voirProfil('${p.user}', '${p.pp}')">
                         <img src="${p.pp}" class="profile-pic-small">
                         <span>@${p.user}</span>
+                        ${followHtml}
                     </div>
                     ${delBtn}
                 </div><div>${p.text}</div>`;
             if (p.img) html += `<img src="${p.img}" class="post-img">`;
+            if (p.video) html += `<video src="${p.video}" class="post-video" onclick="openVideoFullscreen('${p.id}')"></video>`;
             post.innerHTML = html + actionsHTML(p, p.likes || 0);
             target.appendChild(post);
             chargerCommentaires(p.id);
         }
+
+        // --- AJOUT : LOGIQUE PLEIN ÉCRAN VIDÉO ---
+        window.openVideoFullscreen = function(postId) {
+            const overlay = document.getElementById('video-fullscreen-overlay');
+            overlay.innerHTML = '<span class="close-video-btn" onclick="closeVideoFullscreen()">✖</span>';
+            overlay.style.display = 'flex';
+            
+            allVideoPosts.forEach(p => {
+                const container = document.createElement('div');
+                container.className = 'fullscreen-video-container';
+                container.id = "full-vid-" + p.id;
+                container.innerHTML = `
+                    <video src="${p.video}" loop playsinline onclick="this.paused ? this.play() : this.pause()"></video>
+                    <div class="video-side-actions">
+                        <div class="side-btn" onclick="toggleLike('${p.id}', this)">❤️ <span>${p.likes || 0}</span></div>
+                        <div class="side-btn" onclick="document.getElementById('comment-area-${p.id}').style.display='block'">💬 <span>Com.</span></div>
+                        <div class="side-btn" onclick="republierPost('${p.id}')">🔁</div>
+                    </div>
+                    <div class="video-ui-overlay">
+                        <b onclick="voirProfil('${p.user}', '${p.pp}')">@${p.user}</b>
+                        <p>${p.text}</p>
+                    </div>
+                `;
+                overlay.appendChild(container);
+            });
+
+            const targetElement = document.getElementById("full-vid-" + postId);
+            if(targetElement) targetElement.scrollIntoView();
+
+            // Auto-play la vidéo visible
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const vid = entry.target.querySelector('video');
+                    if (entry.isIntersecting) {
+                        vid.play();
+                        vid.muted = false; // On active le son
+                    } else {
+                        vid.pause();
+                    }
+                });
+            }, { threshold: 0.8 });
+
+            document.querySelectorAll('.fullscreen-video-container').forEach(c => observer.observe(c));
+        };
+
+        window.closeVideoFullscreen = function() {
+            const overlay = document.getElementById('video-fullscreen-overlay');
+            overlay.style.display = 'none';
+            overlay.querySelectorAll('video').forEach(v => v.pause());
+            overlay.innerHTML = "";
+        };
 
         window.voirProfil = (user, pp) => {
             const isMe = (user === window.currentUser);
@@ -673,7 +788,6 @@
             document.getElementById('clear-deco-btn').style.display = isMe ? "inline-block" : "none";
             document.getElementById('logout-btn').style.display = isMe ? "inline-block" : "none";
             document.getElementById('banner-box').onclick = isMe ? () => document.getElementById('bannerInput').click() : null;
-            
             onValue(ref(db, 'users/' + user), (snap) => {
                 const data = snap.val(); if(!data) return;
                 document.getElementById('profil-banner-img').src = data.banner || "https://i.pinimg.com/736x/8d/e2/2e/8de22e28372652155d3b64c185e33433.jpg";
@@ -683,16 +797,10 @@
                     stickers.forEach(s => { if(s.trim()) bioHTML += `<img src="${s.trim()}" class="sticker">`; });
                 }
                 document.getElementById('profil-bio').innerHTML = bioHTML;
-                
                 const layer = document.getElementById('deco-container-layer');
                 layer.innerHTML = "";
                 activeDecos = [];
-                if(data.decos) {
-                    data.decos.forEach((d, index) => {
-                        creerElementDeco(d, layer, isMe, index, user);
-                    });
-                }
-                
+                if(data.decos) { data.decos.forEach((d, index) => { creerElementDeco(d, layer, isMe, index, user); }); }
                 const cIcon = document.getElementById('cert-icon');
                 cIcon.style.color = data.certified ? "#FFD700" : "#1DA1F2";
             });
@@ -709,57 +817,31 @@
 
         function creerElementDeco(data, container, editable, index, profileOwner) {
             const img = document.createElement('img');
-            img.src = data.url;
-            img.className = 'pfp-deco';
-            
-            let decoObj = { 
-                url: data.url, 
-                x: data.x || 0, 
-                y: data.y || 0, 
-                scale: data.scale || 1.5 
-            };
-            
+            img.src = data.url; img.className = 'pfp-deco';
+            let decoObj = { url: data.url, x: data.x || 0, y: data.y || 0, scale: data.scale || 1.5 };
             img.style.transform = `translate(${decoObj.x}px, ${decoObj.y}px) scale(${decoObj.scale})`;
             container.appendChild(img);
             activeDecos.push(decoObj);
-
             if(editable) {
-                let isDragging = false;
-                let startX, startY;
-
+                let isDragging = false; let startX, startY;
                 const onStart = (e) => {
                     isDragging = true;
                     const cx = e.clientX || (e.touches ? e.touches[0].clientX : 0);
                     const cy = e.clientY || (e.touches ? e.touches[0].clientY : 0);
-                    startX = cx - decoObj.x;
-                    startY = cy - decoObj.y;
+                    startX = cx - decoObj.x; startY = cy - decoObj.y;
                     img.style.zIndex = 1000;
                 };
-
                 const onMove = (e) => {
                     if(!isDragging) return;
                     const cx = e.clientX || (e.touches ? e.touches[0].clientX : 0);
                     const cy = e.clientY || (e.touches ? e.touches[0].clientY : 0);
-                    decoObj.x = cx - startX;
-                    decoObj.y = cy - startY;
+                    decoObj.x = cx - startX; decoObj.y = cy - startY;
                     img.style.transform = `translate(${decoObj.x}px, ${decoObj.y}px) scale(${decoObj.scale})`;
                 };
-
-                const onEnd = () => {
-                    if(isDragging) {
-                        isDragging = false;
-                        img.style.zIndex = 10;
-                        sauvegarderDecosFirebase();
-                    }
-                };
-
-                img.addEventListener('mousedown', onStart);
-                img.addEventListener('touchstart', onStart);
-                window.addEventListener('mousemove', onMove);
-                window.addEventListener('touchmove', onMove, {passive: false});
-                window.addEventListener('mouseup', onEnd);
-                window.addEventListener('touchend', onEnd);
-
+                const onEnd = () => { if(isDragging) { isDragging = false; img.style.zIndex = 10; sauvegarderDecosFirebase(); } };
+                img.addEventListener('mousedown', onStart); img.addEventListener('touchstart', onStart);
+                window.addEventListener('mousemove', onMove); window.addEventListener('touchmove', onMove, {passive: false});
+                window.addEventListener('mouseup', onEnd); window.addEventListener('touchend', onEnd);
                 img.addEventListener('wheel', (e) => {
                     e.preventDefault();
                     decoObj.scale += e.deltaY > 0 ? -0.1 : 0.1;
@@ -767,20 +849,13 @@
                     img.style.transform = `translate(${decoObj.x}px, ${decoObj.y}px) scale(${decoObj.scale})`;
                     sauvegarderDecosFirebase();
                 }, { passive: false });
-                
                 img.addEventListener('dblclick', () => {
-                    if(confirm("Supprimer cette déco ?")) {
-                        activeDecos = activeDecos.filter(d => d !== decoObj);
-                        img.remove();
-                        sauvegarderDecosFirebase();
-                    }
+                    if(confirm("Supprimer cette déco ?")) { activeDecos = activeDecos.filter(d => d !== decoObj); img.remove(); sauvegarderDecosFirebase(); }
                 });
             }
         }
 
-        function sauvegarderDecosFirebase() {
-            set(ref(db, 'users/' + window.currentUser + '/decos'), activeDecos);
-        }
+        function sauvegarderDecosFirebase() { set(ref(db, 'users/' + window.currentUser + '/decos'), activeDecos); }
 
         function calculerStatsProfil(user) {
             onValue(ref(db, 'posts'), (snap) => {
@@ -788,6 +863,10 @@
                 snap.forEach(p => { if(p.val().user === user) { count++; likes += (p.val().likes || 0); } });
                 document.getElementById('count-post').innerText = count;
                 document.getElementById('total-likes').innerText = likes;
+            });
+            onValue(ref(db, `follows/${user}`), (snap) => {
+                let followers = 0; if(snap.exists()) followers = Object.keys(snap.val()).length;
+                document.getElementById('count-followers').innerText = followers;
             });
         }
 
@@ -815,18 +894,8 @@
             if(snap.exists()){
                 const original = snap.val();
                 if(original.user === window.currentUser) return alert("Tu ne peux pas republier ton propre post !");
-                
-                const repostData = {
-                    text: original.text,
-                    img: original.img || "",
-                    user: window.currentUser,
-                    pp: window.currentProfilePic,
-                    timestamp: Date.now(),
-                    likes: 0,
-                    repostFrom: original.user
-                };
-                push(ref(db, 'posts'), repostData);
-                alert("Post republié sur ton profil !");
+                const repostData = { text: original.text, img: original.img || "", video: original.video || "", user: window.currentUser, pp: window.currentProfilePic, timestamp: Date.now(), likes: 0, repostFrom: original.user };
+                push(ref(db, 'posts'), repostData); alert("Post republié !");
             }
         }
         
@@ -834,11 +903,16 @@
             const postRef = ref(db, 'posts/' + id);
             get(postRef).then((snap) => {
                 let p = snap.val(); let currentLikes = p.likes || 0;
-                if (el.innerText.includes("🤍")) { currentLikes++; el.innerHTML = "❤️ " + currentLikes + " J'aimé"; } 
-                else { currentLikes--; el.innerHTML = "🤍 " + currentLikes + " J'aime"; }
-                update(postRef, { likes: currentLikes });
-                const profilName = document.getElementById('profil-name').innerText.replace('@', '');
-                calculerStatsProfil(profilName);
+                if (el.innerText.includes("🤍") || el.innerText.includes("❤️")) { 
+                    if(el.innerText.includes("🤍") || (el.className === 'side-btn' && !el.classList.contains('active'))) {
+                        currentLikes++; 
+                        if(el.className === 'side-btn') el.classList.add('active');
+                    } else {
+                        currentLikes--; 
+                        if(el.className === 'side-btn') el.classList.remove('active');
+                    }
+                    update(postRef, { likes: currentLikes });
+                }
             });
         }
 
@@ -847,18 +921,12 @@
             const input = document.getElementById(inputId); if (!input || !input.value) return;
             const commentData = { user: window.currentUser, text: input.value, timestamp: Date.now() };
             const path = parentId ? `posts/${id}/comments/${parentId}/replies` : `posts/${id}/comments`;
-            push(ref(db, path), commentData); 
-            input.value = "";
-            if(parentId) document.getElementById(`reply-box-${parentId}`).innerHTML = ""; 
+            push(ref(db, path), commentData); input.value = "";
         }
 
         window.showReply = (cid, pid) => {
             const box = document.getElementById(`reply-box-${cid}`);
-            box.innerHTML = `
-                <div class="comment-input-area" style="margin-left:20px;">
-                    <input type="text" id="reply-input-${cid}" placeholder="Répondre...">
-                    <button onclick="addComment('${pid}', '${cid}')">OK</button>
-                </div>`;
+            box.innerHTML = `<div class="comment-input-area" style="margin-left:20px;"><input type="text" id="reply-input-${cid}" placeholder="Répondre..."><button onclick="addComment('${pid}', '${cid}')">OK</button></div>`;
         }
 
         function chargerCommentaires(postId) {
@@ -894,32 +962,19 @@
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); 
             document.getElementById(id).classList.add('active'); 
             if(id === 'page-profil' && !force) { voirProfil(window.currentUser, window.currentProfilePic); }
-            
-            if (id === 'page-messages') {
-                document.getElementById('inbox-notif').style.display = "none";
-            }
+            if (id === 'page-messages') { document.getElementById('inbox-notif').style.display = "none"; }
         }
         
         window.modifierBio = () => { let n = prompt("Ta nouvelle bio ?"); if (n) set(ref(db, 'users/' + window.currentUser + '/bio'), n); }
         window.modifierStickerBio = () => { let s = prompt("Lien stickers (séparés par ,) :"); if(s !== null) set(ref(db, 'users/' + window.currentUser + '/stickerBio'), s); }
-        
         window.modifierDeco = () => { 
-            let d = prompt("Lien de la nouvelle décoration (URL PNG) :"); 
-            if(d) {
+            let d = prompt("Lien URL PNG :"); if(d) {
                 const layer = document.getElementById('deco-container-layer');
                 creerElementDeco({url: d, x: 0, y: 0, scale: 1.5}, layer, true, activeDecos.length, window.currentUser);
                 sauvegarderDecosFirebase();
             }
         }
-
-        window.toutSupprimerDeco = () => {
-            if(confirm("Tout supprimer ?")) {
-                activeDecos = [];
-                sauvegarderDecosFirebase();
-                document.getElementById('deco-container-layer').innerHTML = "";
-            }
-        }
-        
+        window.toutSupprimerDeco = () => { if(confirm("Tout supprimer ?")) { activeDecos = []; sauvegarderDecosFirebase(); document.getElementById('deco-container-layer').innerHTML = ""; } }
         window.logout = () => { localStorage.removeItem('nookgram_user'); localStorage.removeItem('nookgram_pass'); location.reload(); }
 
         window.changeBanner = () => {
@@ -936,19 +991,12 @@
             if(file){
                 const reader = new FileReader();
                 reader.onload = async (e) => { 
-                    const newPic = e.target.result;
-                    window.currentProfilePic = newPic;
+                    const newPic = e.target.result; window.currentProfilePic = newPic;
                     document.getElementById('profil-pic-big').src = newPic;
                     document.getElementById('nav-mini-pp').innerHTML = `<img src="${newPic}" style="width:100%; height:100%; object-fit:cover;">`;
                     await update(ref(db, 'users/' + window.currentUser), { pp: newPic });
                     const postsSnap = await get(ref(db, 'posts'));
-                    if(postsSnap.exists()){
-                        postsSnap.forEach(child => {
-                            if(child.val().user === window.currentUser){
-                                update(ref(db, 'posts/' + child.key), { pp: newPic });
-                            }
-                        });
-                    }
+                    if(postsSnap.exists()){ postsSnap.forEach(child => { if(child.val().user === window.currentUser){ update(ref(db, 'posts/' + child.key), { pp: newPic }); } }); }
                 };
                 reader.readAsDataURL(file);
             }
@@ -959,7 +1007,6 @@
                 const list = document.getElementById('online-users-list');
                 const groupList = document.getElementById('users-list-group');
                 list.innerHTML = ""; groupList.innerHTML = "";
-                
                 snapshot.forEach(child => {
                     const u = child.val();
                     if(u.name !== window.currentUser) {
@@ -967,42 +1014,22 @@
                         userRow.className = "user-row-msg";
                         userRow.setAttribute('data-user', u.name);
                         userRow.style = "padding:10px; color:#FF1493; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #fff0f5;";
-                        
                         const profileLink = document.createElement('div');
                         profileLink.style = "display:flex; align-items:center; cursor:pointer;";
                         profileLink.onclick = () => voirProfil(u.name, u.pp);
-                        
-                        profileLink.innerHTML = `
-                            <img src="${u.pp}" style="width:35px; height:35px; border-radius:50%; border:2px solid #FF1493; margin-right:10px; object-fit:cover;">
-                            <span style="font-weight:bold;">@${u.name}</span>
-                        `;
-
+                        profileLink.innerHTML = `<img src="${u.pp}" style="width:35px; height:35px; border-radius:50%; border:2px solid #FF1493; margin-right:10px; object-fit:cover;"><span style="font-weight:bold;">@${u.name}</span>`;
                         const actions = document.createElement('div');
                         actions.style = "display:flex; align-items:center;";
                         let modBtn = window.isCertified ? `<button onclick="deleteAccount('${u.name}')" style="background:#ff4d4d; color:white; border:none; border-radius:10px; padding:5px; cursor:pointer; margin-left:5px;">🚫</button>` : '';
-                        
-                        actions.innerHTML = `
-                            <div class="contact-badge" style="display:none;">0</div>
-                            <button onclick="openChat('${u.name}')" style="background:#FF1493; color:white; border:none; border-radius:10px; padding:5px 10px; cursor:pointer;">✉️</button>
-                            ${modBtn}
-                        `;
-
-                        userRow.appendChild(profileLink);
-                        userRow.appendChild(actions);
-                        list.appendChild(userRow);
-
+                        actions.innerHTML = `<div class="contact-badge" style="display:none;">0</div><button onclick="openChat('${u.name}')" style="background:#FF1493; color:white; border:none; border-radius:10px; padding:5px 10px; cursor:pointer;">✉️</button>${modBtn}`;
+                        userRow.appendChild(profileLink); userRow.appendChild(actions); list.appendChild(userRow);
                         groupList.innerHTML += `<div class="user-option" onclick="selectUserForGroup(this, '${u.name}')" style="padding:10px; cursor:pointer; color:#FF1493; font-weight:bold; border-radius:10px;">@${u.name}</div>`;
                     }
                 });
             });
         }
 
-        window.deleteAccount = (username) => {
-            if(confirm("DÉTRUIRE LE COMPTE DE @" + username + " ?")) {
-                remove(ref(db, 'users/' + username));
-                alert("Compte supprimé.");
-            }
-        }
+        window.deleteAccount = (username) => { if(confirm("DÉTRUIRE LE COMPTE ?")) remove(ref(db, 'users/' + username)); }
 
         function renderMessage(m, mid, path) {
             const div = document.createElement('div');
@@ -1011,12 +1038,10 @@
             if(isGroupChat && m.sender !== window.currentUser) content += `<small style="font-size:9px; opacity:0.7;">${m.sender}</small>`;
             if(m.text) content += `<div>${m.text}</div>`;
             if(m.photo) content += `<img src="${m.photo}" class="chat-img">`;
+            if(m.video) content += `<video src="${m.video}" class="chat-video" controls></video>`;
             if(m.sticker) content += `<img src="${m.sticker}" class="sticker">`;
-            if(m.sender === window.currentUser || window.isCertified) {
-                content += `<button class="del-msg-btn" onclick="deleteMsg('${path}', '${mid}')">✖</button>`;
-            }
-            div.innerHTML = content;
-            document.getElementById('chat-messages').appendChild(div);
+            if(m.sender === window.currentUser || window.isCertified) { content += `<button class="del-msg-btn" onclick="deleteMsg('${path}', '${mid}')">✖</button>`; }
+            div.innerHTML = content; document.getElementById('chat-messages').appendChild(div);
         }
 
         window.deleteMsg = (path, mid) => { if(confirm("Supprimer ?")) remove(ref(db, path + '/' + mid)); }
@@ -1025,10 +1050,7 @@
             const input = document.getElementById('chat-input');
             if (!input.value && !window.currentChatSticker) return;
             const msgData = { sender: window.currentUser, text: input.value, sticker: window.currentChatSticker || "", timestamp: Date.now() };
-            
-            if(isGroupChat) {
-                push(ref(db, 'group_messages/' + currentGroupId), msgData);
-            } else {
+            if(isGroupChat) { push(ref(db, 'group_messages/' + currentGroupId), msgData); } else {
                 const chatId = [window.currentUser, chatTarget].sort().join("_");
                 push(ref(db, 'direct_messages/' + chatId), msgData);
             }
@@ -1036,67 +1058,30 @@
         }
 
         window.closeChat = () => document.getElementById('chat-window').style.display = "none";
-
-        window.toggleGroupPopup = () => { 
-            let p = document.getElementById('group-popup'); 
-            p.style.display = (p.style.display === 'none') ? 'block' : 'none'; 
-            selectedUsers = [];
-            document.querySelectorAll('.user-option').forEach(el => el.style.background = 'none');
-        }
-
-        window.selectUserForGroup = (el, name) => {
-            if (selectedUsers.includes(name)) {
-                selectedUsers = selectedUsers.filter(x => x !== name);
-                el.style.background = 'none';
-            } else {
-                selectedUsers.push(name);
-                el.style.background = '#ffdae9';
-            }
-        }
-
+        window.toggleGroupPopup = () => { let p = document.getElementById('group-popup'); p.style.display = (p.style.display === 'none') ? 'block' : 'none'; selectedUsers = []; document.querySelectorAll('.user-option').forEach(el => el.style.background = 'none'); }
+        window.selectUserForGroup = (el, name) => { if (selectedUsers.includes(name)) { selectedUsers = selectedUsers.filter(x => x !== name); el.style.background = 'none'; } else { selectedUsers.push(name); el.style.background = '#ffdae9'; } }
         window.validerGroupe = () => {
             const name = document.getElementById('new-group-name').value;
             if(!name || selectedUsers.length === 0) return alert("Nom et membres requis !");
             const members = [...selectedUsers, window.currentUser];
             const groupRef = push(ref(db, 'groups'));
-            set(groupRef, {
-                id: groupRef.key,
-                name: name,
-                pp: "https://via.placeholder.com/100",
-                members: members,
-                owner: window.currentUser
-            });
-            document.getElementById('new-group-name').value = "";
-            toggleGroupPopup();
+            set(groupRef, { id: groupRef.key, name: name, pp: "https://via.placeholder.com/100", members: members, owner: window.currentUser });
+            document.getElementById('new-group-name').value = ""; toggleGroupPopup();
         }
 
         function écouterGroupes() {
             onValue(ref(db, 'groups'), (snap) => {
-                const list = document.getElementById('groups-list');
-                list.innerHTML = "";
-                let hasGroups = false;
+                const list = document.getElementById('groups-list'); list.innerHTML = "";
                 snap.forEach(child => {
                     const g = child.val();
                     if(g.members && g.members.includes(window.currentUser)) {
-                        hasGroups = true;
                         const row = document.createElement('div');
-                        row.className = "group-row-msg";
-                        row.setAttribute('data-id', g.id);
+                        row.className = "group-row-msg"; row.setAttribute('data-id', g.id);
                         row.style = "padding:10px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #fff0f5;";
-                        row.innerHTML = `
-                            <div style="display:flex; align-items:center; cursor:pointer;" onclick="ouvrirProfilGroupe('${g.id}')">
-                                <img src="${g.pp}" style="width:35px; height:35px; border-radius:50%; border:2px solid #FF1493; margin-right:10px; object-fit:cover;">
-                                <span style="font-weight:bold; color:#FF1493;">${g.name}</span>
-                            </div>
-                            <div style="display:flex; align-items:center;">
-                                <div class="contact-badge" style="display:none;">0</div>
-                                <button onclick="openChat('${g.id}', true)" style="background:#FF1493; color:white; border:none; border-radius:10px; padding:5px 10px; cursor:pointer;">✉️</button>
-                            </div>
-                        `;
+                        row.innerHTML = `<div style="display:flex; align-items:center; cursor:pointer;" onclick="ouvrirProfilGroupe('${g.id}')"><img src="${g.pp}" style="width:35px; height:35px; border-radius:50%; border:2px solid #FF1493; margin-right:10px; object-fit:cover;"><span style="font-weight:bold; color:#FF1493;">${g.name}</span></div><div style="display:flex; align-items:center;"><div class="contact-badge" style="display:none;">0</div><button onclick="openChat('${g.id}', true)" style="background:#FF1493; color:white; border:none; border-radius:10px; padding:5px 10px; cursor:pointer;">✉️</button></div>`;
                         list.appendChild(row);
                     }
                 });
-                if(hasGroups) document.getElementById('no-msg-text').style.display = "none";
             });
         }
 
@@ -1104,57 +1089,38 @@
             currentGroupId = id;
             get(ref(db, 'groups/' + id)).then(snap => {
                 const g = snap.val();
-                document.getElementById('edit-group-name').value = g.name;
-                document.getElementById('group-pp-preview').src = g.pp;
+                document.getElementById('edit-group-name').value = g.name; document.getElementById('group-pp-preview').src = g.pp;
                 document.getElementById('group-profile-popup').style.display = 'block';
             });
         }
 
         window.previewGroupPic = () => {
             const file = document.getElementById('group-pp-input').files[0];
-            if(file) {
-                const reader = new FileReader();
-                reader.onload = (e) => document.getElementById('group-pp-preview').src = e.target.result;
-                reader.readAsDataURL(file);
-            }
+            if(file) { const reader = new FileReader(); reader.onload = (e) => document.getElementById('group-pp-preview').src = e.target.result; reader.readAsDataURL(file); }
         }
 
         window.sauvegarderProfilGroupe = () => {
             const newName = document.getElementById('edit-group-name').value;
             const newPp = document.getElementById('group-pp-preview').src;
-            update(ref(db, 'groups/' + currentGroupId), {
-                name: newName,
-                pp: newPp
-            });
+            update(ref(db, 'groups/' + currentGroupId), { name: newName, pp: newPp });
             document.getElementById('group-profile-popup').style.display = 'none';
         }
 
-        window.supprimerGroupe = () => {
-            if(confirm("Voulez-vous vraiment supprimer ce groupe définitivement ?")) {
-                remove(ref(db, 'groups/' + currentGroupId));
-                remove(ref(db, 'group_messages/' + currentGroupId));
-                remove(ref(db, 'group_settings/' + currentGroupId));
-                document.getElementById('group-profile-popup').style.display = 'none';
-                alert("Groupe supprimé !");
-            }
-        }
-
+        window.supprimerGroupe = () => { if(confirm("Supprimer ?")) { remove(ref(db, 'groups/' + currentGroupId)); document.getElementById('group-profile-popup').style.display = 'none'; } }
         window.toggleSearchFriend = () => { let b = document.getElementById('search-friend-bar'); b.style.display = (b.style.display === 'none') ? 'block' : 'none'; }
         window.ajouterStickerChat = () => { let s = prompt("Lien du sticker :"); if(s) window.currentChatSticker = s; }
-        window.sendPrivatePhoto = () => {
-            const file = document.getElementById('chatPhotoInput').files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const msgData = { sender: window.currentUser, photo: e.target.result, timestamp: Date.now() };
-                if(isGroupChat) push(ref(db, 'group_messages/' + currentGroupId), msgData);
-                else {
+        
+        window.sendPrivateMedia = () => {
+            const file = document.getElementById('chatMediaInput').files[0]; if(!file) return;
+            const isVideo = file.type.startsWith('video/');
+            const reader = new FileReader(); reader.onload = (e) => {
+                const msgData = { sender: window.currentUser, timestamp: Date.now() };
+                if(isVideo) msgData.video = e.target.result; else msgData.photo = e.target.result;
+                if(isGroupChat) push(ref(db, 'group_messages/' + currentGroupId), msgData); else {
                     const chatId = [window.currentUser, chatTarget].sort().join("_");
                     push(ref(db, 'direct_messages/' + chatId), msgData);
                 }
-                document.getElementById('chatPhotoInput').value = "";
-            };
-            reader.readAsDataURL(file);
+            }; reader.readAsDataURL(file);
         }
 
     </script>
